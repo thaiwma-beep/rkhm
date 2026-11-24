@@ -39,7 +39,6 @@ input,select,textarea{padding:9px 10px;border:1px solid #ccc;border-radius:9px;w
 <header><div><b>OK1 <span>ERP</span></b> &nbsp;ระบบร้านผลิตอาหาร — น้ำพริกเผา • หมูหยอง • ไส้กรอก</div>
 <div class="flex"><span id="conn" class="pill">● โหมดทดลอง (Demo)</span><select id="roleSel" style="width:auto" onchange="setRole(this.value)"><option value="owner">บทบาท: เจ้าของ</option><option value="admin">แอดมิน</option><option value="staff">พนักงาน / คนผลิต</option><option value="accounting">สำนักงานบัญชี</option></select><button class="btn gold small" onclick="doLogout()">🚪 ออกจากระบบ</button></div></header>
 <div style="max-width:1440px;margin:12px auto 0;padding:0 18px"><div class="card no-print" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between"><div><b>🌿 Paperless — เอกสารไร้กระดาษ</b> <span class="muted">กดที่เอกสารใดก็ได้ → ดูตัวอย่าง → พิมพ์ / PDF / PNG / ส่งอีเมล / ส่งลิงก์</span></div><div class="flex"><button class="btn gold small" onclick="openDoc('invoice')">🧾 ใบแจ้งหนี้ / ใบเสร็จ</button><button class="btn small" onclick="openDoc('delivery')">🚚 ใบส่งของ</button><button class="btn small" onclick="openDoc('production')">🏭 ใบสั่งผลิต</button><button class="btn small" onclick="openDoc('requisition')">📦 ใบเบิกวัตถุดิบ</button><button class="btn small" onclick="openDoc('monthly')">🧮 สรุปยอดเดือน</button></div></div></div>
-<div id="globalApiBar" class="no-print" style="max-width:1440px;margin:12px auto 0;padding:0 18px"><div class="card" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;border:2px solid #e6b800;background:#fffbe6"><div style="flex:1;min-width:280px"><b>🔌 เชื่อม Google Sheet</b> <span id="apiState" style="font-size:13px;color:#666">— ยังไม่ได้ใส่ URL API (จึงแสดงข้อมูลทดลอง)</span><br><span style="font-size:12px;color:#888">วางลิงก์ .../exec จาก Apps Script ตรงนี้ กดบันทึก แล้วเว็บจะจำไว้ในเครื่องนี้</span></div><input id="globalApiUrl" placeholder="https://script.google.com/macros/s/XXXX/exec" style="flex:2;min-width:280px"><button class="btn gold" onclick="saveApiGlobal()">💾 บันทึก + ทดสอบเชื่อมต่อ</button><button class="btn ghost" onclick="testApi()">🔍 ทดสอบอีกครั้ง</button></div><div id="apiError" style="display:none;margin-top:8px;background:#fde8e8;border:1px solid #f5a3a3;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.7"></div></div>
 <div class="layout">
 <nav id="nav"></nav>
 <main>
@@ -71,7 +70,7 @@ const DEMO = {
  ],
  Customers:[
   {name:'อารีย์',type:'ปลีก',phone:'เบอร์หลัก 081-xxx-xxxx',province:'กรุงเทพมหานคร',addr:'หมู่ 1',status:'ใช้งาน'},
-  {name:'ร้านค้าปลีก กรุงเทพมหานคร',type:'เครดิต',phone:'02-xxx-xxxx',province:'กรุงเทพมหานคร',addr:'-',status:'ใช้งาน'},
+  {name:'ร้านค้าปลีก กรุงเทพมหานคร',type:'ทั่วไป',phone:'02-xxx-xxxx',province:'กรุงเทพมหานคร',addr:'-',status:'ใช้งาน'},
  ],
  Suppliers:[
   {name:'ซัพพลายเออร์ หมูสด',phone:'เบอร์หลัก 081-xxx-xxxx',credit:'เครดิต 7 วัน',status:'ใช้งาน'},
@@ -172,7 +171,7 @@ function pageDashboard(){
 function pageOrders(){
  const rows=filterRows(dataFor('Orders'),['customer','product','no','status']);
  return `<h1>🧾 ออเดอร์ / ขาย</h1><p class="muted">ช่องทาง: เงินสด / เครดิต • สถานะ: รอคอนเฟิร์ม → รอผลิต → ส่งแล้ว → สำเร็จ</p>${searchBar(['รอคอนเฟิร์ม','รอผลิต','ส่งแล้ว','สำเร็จ','ยกเลิก'])}
- <div class="card"><h3>➕ เพิ่มออเดอร์ใหม่</h3><div class="row r4"><div><label>ลูกค้า</label><input id="oCustomer" placeholder="เช่น อารีย์"></div><div><label>สินค้า</label><select id="oProduct"><option>น้ำพริกเผาโฮมเมด</option><option>หมูหยองพรีเมียม</option><option>เครื่องปรุงไส้กรอก</option></select></div><div><label>จำนวน</label><input id="oQty" type="number" value="10"></div><div><label>ช่องทาง</label><select id="oChannel"><option>เงินสด</option><option>เครดิต</option></select></div></div><br><button class="btn" onclick="addOrder()">บันทึกออเดอร์</button> <span id="oMsg"></span></div>
+ <div class="card"><h3>➕ เพิ่มออเดอร์ใหม่</h3><div class="row r4"><div><label>ลูกค้า (เลือกจากฐานลูกค้า)</label><select id="oCustomer">${dataFor('Customers').map(c=>`<option value="${c.name}">${c.name} (${c.type||''})</option>`).join('')}</select></div><div><label>สินค้า</label><select id="oProduct"><option>น้ำพริกเผาโฮมเมด</option><option>หมูหยองพรีเมียม</option><option>เครื่องปรุงไส้กรอก</option></select></div><div><label>จำนวน</label><input id="oQty" type="number" value="10"></div><div><label>ช่องทาง</label><select id="oChannel"><option>เงินสด</option><option>เครดิต</option></select></div></div><br><button class="btn" onclick="addOrder()">บันทึกออเดอร์</button> <span id="oMsg"></span></div>
  <div class="card"><h3>รายการทั้งหมด (${rows.length})</h3>${table(['วันที่','เลขที่','ลูกค้า','สินค้า','จำนวน','ยอด','ช่องทาง','สถานะ','จัดการ'],rows.map((o,i)=>[o.date,o.no,o.customer,o.product,o.qty+' '+(o.unit||''),money(o.total),o.channel||'',badge(o.status),`<button class="btn small" onclick="changeStatus('Orders',${i})">เลื่อนสถานะ →</button>`]))}</div>`;
 }
 function pageProducts(){
@@ -186,8 +185,8 @@ function pageStock(){
 }
 function pageCustomers(){
  const rows=filterRows(dataFor('Customers'),['name','province','type']);
- return `<h1>👥 ลูกค้า</h1>${searchBar(['ปลีก','เครดิต','ใช้งาน'])}<div class="card"><h3>รายชื่อลูกค้า (${rows.length})</h3>${table(['ชื่อ','ประเภท','เบอร์หลัก','จังหวัด','ที่อยู่','สถานะ'],rows.map(c=>[c.name,c.type,c.phone||'',c.province||'',c.addr||'',badge(c.status||'ใช้งาน')]))}</div>
- <div class="card"><h3>➕ เพิ่มลูกค้า</h3><div class="row r3"><div><label>ชื่อ *</label><input id="cName" placeholder="เช่น นายดำ"></div><div><label>ประเภท</label><select id="cType"><option>ปลีก</option><option>เครดิต</option></select></div><div><label>เบอร์หลัก *</label><input id="cPhone" placeholder="เช่น 081-xxx-xxxx"></div></div><div class="row r2" style="margin-top:10px"><div><label>จังหวัด</label><input id="cProv" value="กรุงเทพมหานคร"></div><div><label>ที่อยู่ *</label><input id="cAddr" placeholder="เช่น หมู่ 1 ต. ... อ. ..."></div></div><br><button class="btn" onclick="addRow('Customers')">บันทึกลูกค้า</button></div>`;
+ return `<h1>👥 ลูกค้า</h1>${searchBar(['ปลีก','ทั่วไป','ใช้งาน'])}<div class="card"><h3>รายชื่อลูกค้า (${rows.length})</h3>${table(['ชื่อ','ประเภท','เบอร์หลัก','จังหวัด','ที่อยู่','สถานะ','จัดการ'],rows.map((c,i)=>[c.name,c.type,c.phone||'',c.province||'',c.addr||'',badge(c.status||'ใช้งาน'),`<button class="btn small gold" onclick="editCustomer(${i})">✏️ แก้ไข</button>`]))}</div>
+ <div class="card"><h3 id="custFormTitle">➕ เพิ่มลูกค้า</h3><div class="row r3"><div><label>ชื่อ *</label><input id="cName" placeholder="เช่น นายดำ"></div><div><label>ประเภท</label><select id="cType"><option>ปลีก</option><option>ทั่วไป</option></select></div><div><label>เบอร์หลัก *</label><input id="cPhone" placeholder="เช่น 081-xxx-xxxx"></div></div><div class="row r2" style="margin-top:10px"><div><label>จังหวัด</label><input id="cProv" value="กรุงเทพมหานคร"></div><div><label>ที่อยู่ *</label><input id="cAddr" placeholder="เช่น หมู่ 1 ต. ... อ. ..."></div></div><br><button class="btn" id="custSaveBtn" onclick="addRow('Customers')">บันทึกลูกค้า</button> <button class="btn ghost" id="custCancelBtn" style="display:none" onclick="cancelEditCustomer()">ยกเลิกการแก้ไข</button></div>`;
 }
 function pageSuppliers(){
  const rows=filterRows(dataFor('Suppliers'),['name','status']);
@@ -243,6 +242,10 @@ function addRow(kind){
     if(!name) return alert('ใส่ชื่อสินค้าก่อน');
     sheet='Products'; values=['P-'+Date.now().toString().slice(-3),name,unit,price,0,'ใช้งาน'];
   } else { toast('เมนูนี้ยังบันทึกแบบทดลองอยู่'); return; }
+  if(EDITING_CUSTOMER && sheet==='Customers'){
+    fetch(API,{method:'POST',body:JSON.stringify({action:'updateRow',sheet:sheet,key:EDITING_CUSTOMER,values:values})}).then(r=>r.json()).then(j=>{ if(j.ok){toast('แก้ไขลูกค้าเรียบร้อย ✅');cancelEditCustomer();loadAll();} else toast('แก้ไขไม่สำเร็จ: '+(j.error||'')); }).catch(e=>toast('แก้ไขไม่สำเร็จ: '+e.message));
+    return;
+  }
   fetch(API,{method:'POST',body:JSON.stringify({action:'saveRow',sheet:sheet,values:values})}).then(r=>r.json()).then(j=>{ if(j.ok){toast('บันทึกลง Sheet จริงแล้ว ✅');loadAll();} else toast('บันทึกไม่สำเร็จ: '+(j.error||'')); }).catch(e=>toast('บันทึกไม่สำเร็จ: '+e.message));
 }
 function addProduction(){const p=document.getElementById('prProduct').value;const q=document.getElementById('prQty').value;const sh=document.getElementById('prShift').value;
@@ -316,6 +319,30 @@ function doLogout(){
   toast('ออกจากระบบแล้ว');
 }
 checkLogin();
+
+// ===== แก้ไขลูกค้าเดิม =====
+var EDITING_CUSTOMER = '';
+function editCustomer(i){
+  var rows = dataFor('Customers');
+  // rows หลัง filter อาจไม่ตรง index ถ้ามีการค้นหา ให้ใช้ชื่อเป็นคีย์แทน
+  var c = rows[i]; if(!c) return;
+  EDITING_CUSTOMER = c.name;
+  var set = function(id,v){ var el=document.getElementById(id); if(el) el.value=v||''; };
+  set('cName', c.name); set('cType', c.type); set('cPhone', c.phone); set('cProv', c.province); set('cAddr', c.addr);
+  var title=document.getElementById('custFormTitle'); if(title) title.textContent='✏️ แก้ไขลูกค้า: '+c.name;
+  var btn=document.getElementById('custSaveBtn'); if(btn) btn.textContent='💾 บันทึกการแก้ไข';
+  var cancel=document.getElementById('custCancelBtn'); if(cancel) cancel.style.display='inline-block';
+  document.getElementById('cName').scrollIntoView({behavior:'smooth'});
+  toast('กำลังแก้ไข: '+c.name);
+}
+function cancelEditCustomer(){
+  EDITING_CUSTOMER='';
+  ['cName','cPhone','cAddr'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  var cp=document.getElementById('cProv'); if(cp) cp.value='กรุงเทพมหานคร';
+  var title=document.getElementById('custFormTitle'); if(title) title.textContent='➕ เพิ่มลูกค้า';
+  var btn=document.getElementById('custSaveBtn'); if(btn) btn.textContent='บันทึกลูกค้า';
+  var cancel=document.getElementById('custCancelBtn'); if(cancel) cancel.style.display='none';
+}
 render(); syncApiInputs();
 if(API){document.getElementById('conn').textContent='● เชื่อม Google Sheet แล้ว';loadAll();}
 </script></body></html>
