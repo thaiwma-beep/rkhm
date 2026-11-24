@@ -29,8 +29,15 @@ input,select,textarea{padding:9px 10px;border:1px solid #ccc;border-radius:9px;w
 .doc-modal.open{display:flex}.doc-paper{background:#fff;width:100%;max-width:780px;max-height:92vh;overflow:auto;padding:28px 32px;border-radius:8px;color:#111}
 .doc-paper h2{margin:0}.doc-paper table{font-size:13px}.doc-paper th{background:#22123e}
 </style></head><body>
+<div id="loginScreen" style="position:fixed;inset:0;background:#22123e;z-index:999;display:none;align-items:center;justify-content:center;padding:16px"><div style="background:#fff;border-radius:20px;padding:28px;width:100%;max-width:420px;text-align:center"><div style="font-size:42px">🥫</div><h2 style="margin:8px 0 2px">OK1 ERP</h2><p style="color:#666;font-size:13px;margin:0 0 16px">ระบบร้านผลิตอาหาร — น้ำพริกเผา • หมูหยอง • ไส้กรอก</p>
+<label style="display:block;text-align:left">ชื่อผู้ใช้</label><input id="loginName" placeholder="เช่น เจ้าของ / แอดมิน / คนผลิต" value="เจ้าของ">
+<div style="height:10px"></div><label style="display:block;text-align:left">บทบาท</label><select id="loginRole"><option value="owner">เจ้าของ</option><option value="admin">แอดมิน</option><option value="staff">พนักงาน / คนผลิต</option><option value="accounting">สำนักงานบัญชี</option></select>
+<div style="height:10px"></div><label style="display:block;text-align:left">รหัสผ่าน (ทดลอง: 1234)</label><input id="loginPass" type="password" placeholder="1234" value="1234">
+<div style="height:14px"></div><button class="btn gold" style="width:100%" onclick="doLogin()">🔓 เข้าสู่ระบบ</button>
+<p style="font-size:12px;color:#888;margin-top:12px">รหัสทดลองทุกบทบาทคือ <b>1234</b> — เปลี่ยนรหัสได้ในไฟล์ โดยแก้ตัวเลขในฟังก์ชัน doLogin()</p>
+<p id="loginErr" style="color:#c00;font-size:13px;display:none">รหัสผ่านไม่ถูกต้อง ลอง 1234</p></div></div>
 <header><div><b>OK1 <span>ERP</span></b> &nbsp;ระบบร้านผลิตอาหาร — น้ำพริกเผา • หมูหยอง • ไส้กรอก</div>
-<div class="flex"><span id="conn" class="pill">● โหมดทดลอง (Demo)</span><select id="roleSel" style="width:auto" onchange="setRole(this.value)"><option value="owner">บทบาท: เจ้าของ</option><option value="admin">แอดมิน</option><option value="staff">พนักงาน / คนผลิต</option><option value="accounting">สำนักงานบัญชี</option></select></div></header>
+<div class="flex"><span id="conn" class="pill">● โหมดทดลอง (Demo)</span><select id="roleSel" style="width:auto" onchange="setRole(this.value)"><option value="owner">บทบาท: เจ้าของ</option><option value="admin">แอดมิน</option><option value="staff">พนักงาน / คนผลิต</option><option value="accounting">สำนักงานบัญชี</option></select><button class="btn gold small" onclick="doLogout()">🚪 ออกจากระบบ</button></div></header>
 <div style="max-width:1440px;margin:12px auto 0;padding:0 18px"><div class="card no-print" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between"><div><b>🌿 Paperless — เอกสารไร้กระดาษ</b> <span class="muted">กดที่เอกสารใดก็ได้ → ดูตัวอย่าง → พิมพ์ / PDF / PNG / ส่งอีเมล / ส่งลิงก์</span></div><div class="flex"><button class="btn gold small" onclick="openDoc('invoice')">🧾 ใบแจ้งหนี้ / ใบเสร็จ</button><button class="btn small" onclick="openDoc('delivery')">🚚 ใบส่งของ</button><button class="btn small" onclick="openDoc('production')">🏭 ใบสั่งผลิต</button><button class="btn small" onclick="openDoc('requisition')">📦 ใบเบิกวัตถุดิบ</button><button class="btn small" onclick="openDoc('monthly')">🧮 สรุปยอดเดือน</button></div></div></div>
 <div id="globalApiBar" class="no-print" style="max-width:1440px;margin:12px auto 0;padding:0 18px"><div class="card" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;border:2px solid #e6b800;background:#fffbe6"><div style="flex:1;min-width:280px"><b>🔌 เชื่อม Google Sheet</b> <span id="apiState" style="font-size:13px;color:#666">— ยังไม่ได้ใส่ URL API (จึงแสดงข้อมูลทดลอง)</span><br><span style="font-size:12px;color:#888">วางลิงก์ .../exec จาก Apps Script ตรงนี้ กดบันทึก แล้วเว็บจะจำไว้ในเครื่องนี้</span></div><input id="globalApiUrl" placeholder="https://script.google.com/macros/s/XXXX/exec" style="flex:2;min-width:280px"><button class="btn gold" onclick="saveApiGlobal()">💾 บันทึก + ทดสอบเชื่อมต่อ</button><button class="btn ghost" onclick="testApi()">🔍 ทดสอบอีกครั้ง</button></div><div id="apiError" style="display:none;margin-top:8px;background:#fde8e8;border:1px solid #f5a3a3;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.7"></div></div>
 <div class="layout">
@@ -180,7 +187,7 @@ function pageStock(){
 function pageCustomers(){
  const rows=filterRows(dataFor('Customers'),['name','province','type']);
  return `<h1>👥 ลูกค้า</h1>${searchBar(['ปลีก','เครดิต','ใช้งาน'])}<div class="card"><h3>รายชื่อลูกค้า (${rows.length})</h3>${table(['ชื่อ','ประเภท','เบอร์หลัก','จังหวัด','ที่อยู่','สถานะ'],rows.map(c=>[c.name,c.type,c.phone||'',c.province||'',c.addr||'',badge(c.status||'ใช้งาน')]))}</div>
- <div class="card"><h3>➕ เพิ่มลูกค้า</h3><div class="row r3"><div><label>ชื่อ</label><input id="cName"></div><div><label>ประเภท</label><select id="cType"><option>ปลีก</option><option>เครดิต</option></select></div><div><label>จังหวัด</label><input id="cProv" value="กรุงเทพมหานคร"></div></div><br><button class="btn" onclick="addRow('Customers')">บันทึกลูกค้า</button></div>`;
+ <div class="card"><h3>➕ เพิ่มลูกค้า</h3><div class="row r3"><div><label>ชื่อ *</label><input id="cName" placeholder="เช่น นายดำ"></div><div><label>ประเภท</label><select id="cType"><option>ปลีก</option><option>เครดิต</option></select></div><div><label>เบอร์หลัก *</label><input id="cPhone" placeholder="เช่น 081-xxx-xxxx"></div></div><div class="row r2" style="margin-top:10px"><div><label>จังหวัด</label><input id="cProv" value="กรุงเทพมหานคร"></div><div><label>ที่อยู่ *</label><input id="cAddr" placeholder="เช่น หมู่ 1 ต. ... อ. ..."></div></div><br><button class="btn" onclick="addRow('Customers')">บันทึกลูกค้า</button></div>`;
 }
 function pageSuppliers(){
  const rows=filterRows(dataFor('Suppliers'),['name','status']);
@@ -225,8 +232,10 @@ function addRow(kind){
     const name=(document.getElementById('cName')||{}).value||'';
     const type=(document.getElementById('cType')||{}).value||'ปลีก';
     const prov=(document.getElementById('cProv')||{}).value||'';
+    const phone=(document.getElementById('cPhone')||{}).value||'';
+    const addr=(document.getElementById('cAddr')||{}).value||'';
     if(!name) return alert('ใส่ชื่อลูกค้าก่อน');
-    sheet='Customers'; values=[name,type,'',prov,'','ใช้งาน'];
+    sheet='Customers'; values=[name,type,phone,prov,addr,'ใช้งาน'];
   } else if(kind==='Products'){
     const name=(document.getElementById('pName')||{}).value||'';
     const price=Number((document.getElementById('pPrice')||{}).value||0);
@@ -278,6 +287,35 @@ function downloadDocPNG(){
   const img=new Image(); img.onload=()=>{const c=document.createElement('canvas');const scale=2;c.width=w*scale;c.height=h*scale;const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);const a=document.createElement('a');a.download='OK1-'+(window._docKind||'doc')+'-'+new Date().toISOString().slice(0,10)+'.png';a.href=c.toDataURL('image/png');a.click();toast('เซฟไฟล์ PNG แล้ว 📸');}; img.onerror=()=>alert('เบราว์เซอร์นี้เซฟ PNG แบบนี้ไม่ได้ ให้ใช้ปุ่ม พิมพ์ / เซฟเป็น PDF แทน'); img.src=url;
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDoc();});
+
+// ===== LOGIN / LOGOUT =====
+function checkLogin(){
+  var u = localStorage.getItem('ok1_user');
+  var ls = document.getElementById('loginScreen');
+  if(!u){ if(ls){ ls.style.display='flex'; } return false; }
+  try{ var obj=JSON.parse(u); ROLE=obj.role||'owner'; var rs=document.getElementById('roleSel'); if(rs) rs.value=ROLE; }catch(e){}
+  if(ls) ls.style.display='none';
+  return true;
+}
+function doLogin(){
+  var name=(document.getElementById('loginName')||{}).value||'';
+  var role=(document.getElementById('loginRole')||{}).value||'owner';
+  var pass=(document.getElementById('loginPass')||{}).value||'';
+  if(!name) return alert('ใส่ชื่อผู้ใช้ก่อน');
+  if(pass!=='1234'){ var e=document.getElementById('loginErr'); if(e) e.style.display='block'; return; }
+  localStorage.setItem('ok1_user', JSON.stringify({name:name, role:role}));
+  ROLE=role; var rs=document.getElementById('roleSel'); if(rs) rs.value=role;
+  var ls=document.getElementById('loginScreen'); if(ls) ls.style.display='none';
+  toast('ยินดีต้อนรับ '+name+' (บทบาท: '+role+')');
+  render();
+}
+function doLogout(){
+  if(!confirm('ออกจากระบบใช่ไหม?')) return;
+  localStorage.removeItem('ok1_user');
+  var ls=document.getElementById('loginScreen'); if(ls) ls.style.display='flex';
+  toast('ออกจากระบบแล้ว');
+}
+checkLogin();
 render(); syncApiInputs();
 if(API){document.getElementById('conn').textContent='● เชื่อม Google Sheet แล้ว';loadAll();}
 </script></body></html>
