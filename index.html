@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OK1 ERP — ระบบจัดการร้านผลิตอาหาร</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Tahoma,sans-serif;background:#f4f1ff;color:#22123e}
+a{color:#5b2ea6}header{background:#22123e;color:#fff;padding:14px 18px;display:flex;justify-content:space-between;gap:12px;align-items:center;position:sticky;top:0;z-index:10;flex-wrap:wrap}
+header b{font-size:20px}header b span{color:#f5c451}.pill{background:#f5c451;color:#22123e;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:800}
+.layout{display:flex;max-width:1440px;margin:0 auto}nav{width:260px;flex:0 0 260px;background:#fff;border-right:1px solid #e5ddff;min-height:calc(100vh - 58px);padding:14px;position:sticky;top:58px;height:calc(100vh - 58px);overflow:auto}
+nav h4{margin:14px 6px 6px;font-size:12px;color:#888;letter-spacing:.08em}nav button{display:flex;gap:10px;width:100%;text-align:left;background:transparent;border:0;padding:10px 10px;border-radius:10px;cursor:pointer;font-size:14px;color:#22123e}nav button.active,nav button:hover{background:#efe7ff;font-weight:700}
+main{flex:1;padding:18px;min-width:0}.topbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+h1{margin:4px 0 2px;font-size:26px}.muted{color:#666;font-size:13px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}nav{display:none}}
+.kpi{background:#fff;border:1px solid #e5ddff;border-radius:16px;padding:14px}.kpi b{font-size:22px}.kpi small{display:block;color:#666}
+.card{background:#fff;border:1px solid #e5ddff;border-radius:16px;padding:16px;margin-bottom:14px}.card h3{margin:0 0 10px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:9px 8px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}th{background:#22123e;color:#fff;white-space:nowrap}
+.badge{padding:4px 8px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}.ok{background:#e6f7ec;color:#157347}.warn{background:#fff3cd;color:#8a6d00}.bad{background:#fde8e8;color:#a00}.info{background:#e8f0ff;color:#1d4ed8}.gray{background:#eee;color:#444}
+input,select,textarea{padding:9px 10px;border:1px solid #ccc;border-radius:9px;width:100%;font-size:14px}label{font-size:12px;font-weight:700}
+.row{display:grid;gap:10px}.r2{grid-template-columns:1fr 1fr}.r3{grid-template-columns:1fr 1fr 1fr}.r4{grid-template-columns:1fr 1fr 1fr 1fr}@media(max-width:700px){.r2,.r3,.r4{grid-template-columns:1fr}}
+.btn{background:#22123e;color:#fff;border:0;padding:10px 16px;border-radius:999px;cursor:pointer;font-weight:700}.btn.gold{background:#f5c451;color:#22123e}.btn.ghost{background:#eee;color:#22123e}.btn.small{padding:6px 10px;font-size:12px}.btn:disabled{opacity:.5}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.toolbar input{max-width:280px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.tabs button{border:1px solid #ddd;background:#fff;padding:7px 12px;border-radius:999px;cursor:pointer}.tabs button.active{background:#22123e;color:#fff}
+.toast{position:fixed;right:16px;bottom:16px;background:#22123e;color:#fff;padding:12px 16px;border-radius:12px;z-index:99;display:none}
+.config{background:#fff3cd;border:1px solid #e6b800;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.7}
+.lockbox{background:#fde8e8;border:1px solid #f5a3a3;border-radius:12px;padding:12px 14px}
+.flex{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+@media print{header,nav,.no-print{display:none!important}main{padding:0}.card{border:1px solid #000;break-inside:avoid}}
+.doc-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:200;padding:16px}
+.doc-modal.open{display:flex}.doc-paper{background:#fff;width:100%;max-width:780px;max-height:92vh;overflow:auto;padding:28px 32px;border-radius:8px;color:#111}
+.doc-paper h2{margin:0}.doc-paper table{font-size:13px}.doc-paper th{background:#22123e}
+</style></head><body>
+<header><div><b>OK1 <span>ERP</span></b> &nbsp;ระบบร้านผลิตอาหาร — น้ำพริกเผา • หมูหยอง • ไส้กรอก</div>
+<div class="flex"><span id="conn" class="pill">● โหมดทดลอง (Demo)</span><select id="roleSel" style="width:auto" onchange="setRole(this.value)"><option value="owner">บทบาท: เจ้าของ</option><option value="admin">แอดมิน</option><option value="staff">พนักงาน / คนผลิต</option><option value="accounting">สำนักงานบัญชี</option></select></div></header>
+<div style="max-width:1440px;margin:12px auto 0;padding:0 18px"><div class="card no-print" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between"><div><b>🌿 Paperless — เอกสารไร้กระดาษ</b> <span class="muted">กดที่เอกสารใดก็ได้ → ดูตัวอย่าง → พิมพ์ / PDF / PNG / ส่งอีเมล / ส่งลิงก์ ให้ผู้เกี่ยวข้อง ไม่ต้องปริ้นเก็บแฟ้ม</span></div><div class="flex"><button class="btn gold small" onclick="openDoc('invoice')">🧾 ใบแจ้งหนี้ / ใบเสร็จ</button><button class="btn small" onclick="openDoc('delivery')">🚚 ใบส่งของ</button><button class="btn small" onclick="openDoc('production')">🏭 ใบสั่งผลิต</button><button class="btn small" onclick="openDoc('requisition')">📦 ใบเบิกวัตถุดิบ</button><button class="btn small" onclick="openDoc('monthly')">🧮 สรุปยอดเดือน</button></div></div></div>
+<div class="layout">
+<nav id="nav"></nav>
+<main>
+<div id="page"></div>
+</main></div>
+<div class="doc-modal" id="docModal"><div class="doc-paper" id="docPaper"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+// ============ DEMO DATA — ตรงกับไฟล์เดิม ============
+const DEMO = {
+ Dashboard:{income:128500,expense:76400,orders:42,lowStock:3},
+ Orders:[
+  {date:'2026-11-25',no:'ORD-001',customer:'อารีย์',product:'น้ำพริกเผาโฮมเมด',qty:50,unit:'กระปุก',total:7500,channel:'เงินสด',status:'รอคอนเฟิร์ม'},
+  {date:'2026-11-24',no:'ORD-002',customer:'ร้านค้าปลีก กรุงเทพมหานคร',product:'หมูหยองพรีเมียม',qty:100,unit:'กระปุก',total:18000,channel:'เครดิต',status:'รอผลิต'},
+  {date:'2026-11-24',no:'ORD-003',customer:'ลูกค้า ทั่วไป',product:'เครื่องปรุงไส้กรอก',qty:20,unit:'ถุง',total:6000,channel:'เงินสด',status:'ส่งแล้ว'},
+  {date:'2026-11-23',no:'ORD-004',customer:'อารีย์',product:'น้ำพริกเผาโฮมเมด',qty:30,unit:'กระปุก',total:4500,channel:'เครดิต',status:'สำเร็จ'},
+  {date:'2026-11-22',no:'ORD-005',customer:'ร้านค้าปลีก',product:'หมูหยองพรีเมียม',qty:10,unit:'กระปุก',total:1800,channel:'เงินสด',status:'ยกเลิก'},
+ ],
+ Products:[
+  {code:'P-001',name:'น้ำพริกเผาโฮมเมด',unit:'กระปุก',price:150,stock:120,status:'ใช้งาน'},
+  {code:'P-002',name:'หมูหยองพรีเมียม',unit:'กระปุก',price:180,stock:45,status:'ใช้งาน'},
+  {code:'P-003',name:'เครื่องปรุงไส้กรอก',unit:'ถุง',price:300,stock:30,status:'ใช้งาน'},
+ ],
+ Stock:[
+  {code:'RM-001',name:'เนื้อหมูสันนอก',qty:25,unit:'กก.',min:20,status:'ปกติ',exp:'2026-12-10'},
+  {code:'RM-002',name:'หมูบด',qty:12,unit:'กก.',min:20,status:'วัตถุดิบใกล้หมด',exp:'2026-11-28'},
+  {code:'RM-003',name:'พริกแห้ง จินดา',qty:8,unit:'กก.',min:10,status:'วัตถุดิบใกล้หมด',exp:'2027-03-01'},
+  {code:'RM-004',name:'กระปุก',qty:500,unit:'ใบ',min:100,status:'ปกติ',exp:'-'},
+ ],
+ Customers:[
+  {name:'อารีย์',type:'ปลีก',phone:'เบอร์หลัก 081-xxx-xxxx',province:'กรุงเทพมหานคร',addr:'หมู่ 1',status:'ใช้งาน'},
+  {name:'ร้านค้าปลีก กรุงเทพมหานคร',type:'เครดิต',phone:'02-xxx-xxxx',province:'กรุงเทพมหานคร',addr:'-',status:'ใช้งาน'},
+ ],
+ Suppliers:[
+  {name:'ซัพพลายเออร์ หมูสด',phone:'เบอร์หลัก 081-xxx-xxxx',credit:'เครดิต 7 วัน',status:'ใช้งาน'},
+  {name:'ซัพพลายเออร์ พริกแห้ง',phone:'-',credit:'เงินสด',status:'พักการสั่งซื้อ'},
+ ],
+ Production:[
+  {date:'2026-11-25',product:'น้ำพริกเผาโฮมเมด',qty:50,unit:'กระปุก',worker:'คนผลิต กะเช้า',shift:'กะเช้า',material:'เบิกใช้ผลิต: พริกแห้ง 5 กก.',status:'รอผลิต'},
+  {date:'2026-11-24',product:'หมูหยองพรีเมียม',qty:100,unit:'กระปุก',worker:'คนผลิต กะเช้า',shift:'กะเช้า',material:'เบิกใช้ผลิต: หมูบด 20 กก.',status:'สำเร็จ'},
+ ],
+ Accounting:[
+  {month:'2026-11',income:128500,expense:76400,locked:false,note:'รอส่งต่อสำนักงานบัญชี'},
+  {month:'2026-10',income:112000,expense:69000,locked:true,note:'ส่งแล้ว / ล็อคแล้ว'},
+ ],
+ Users:[
+  {name:'เจ้าของ',role:'owner',note:'ดูได้ทุกอย่าง / ล็อคยอดเดือนได้'},
+  {name:'แอดมิน',role:'admin',note:'จัดการออเดอร์ สต็อก ผลิต'},
+  {name:'คนผลิต',role:'staff',note:'ดูผลิต + เบิกวัตถุดิบ'},
+  {name:'สำนักงานบัญชี',role:'accounting',note:'ดูบัญชีอย่างเดียว'},
+ ],
+};
+let ROLE='owner';
+let CURRENT='dashboard';
+let FILTER={q:'',status:'ทั้งหมด'};
+let API=localStorage.getItem('ok1_api')||'';
+let LIVE=null; // ข้อมูลจริงจาก Sheet ถ้าเชื่อมแล้ว
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',2600);}
+function setRole(v){ROLE=v;toast('เปลี่ยนบทบาทเป็น: '+v);
+// ===== PAPERLESS: เอกสาร + พิมพ์ + ส่งต่อ =====
+function currentOrder(){ const o=dataFor('Orders'); return o[0]||{date:'2026-11-25',no:'ORD-001',customer:'อารีย์',product:'น้ำพริกเผาโฮมเมด',qty:50,unit:'กระปุก',total:7500,channel:'เงินสด',status:'รอคอนเฟิร์ม'}; }
+function docHTML(kind){
+  const o=currentOrder(); const stock=dataFor('Stock'); const prod=dataFor('Production');
+  const head=(title,sub)=>`<div style="display:flex;justify-content:space-between"><div><h2>OK1 ERP</h2><div style="color:#666;font-size:13px">ร้านผลิตอาหาร — น้ำพริกเผา • หมูหยอง • ไส้กรอก</div></div><div style="text-align:right"><b>${title}</b><br><span style="color:#666;font-size:13px">${sub}</span></div></div><hr>`;
+  const foot=`<hr><p style="font-size:12px;color:#666">เอกสารอิเล็กทรอนิกส์ (Paperless) — สร้างจากระบบ OK1 ERP • ตรวจสอบได้จาก Google Sheet ต้นฉบับ • ไม่ต้องพิมพ์เก็บแฟ้ม ถ้าต้องการสำเนาให้ใช้ปุ่ม พิมพ์ / เซฟ PDF ด้านล่าง</p>
+  <div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn" onclick="window.print()">🖨️ พิมพ์ / เซฟเป็น PDF</button><button class="btn gold" onclick="downloadDocPNG()">🖼️ เซฟเป็น PNG</button><button class="btn gold" onclick="sendDocEmail()">📧 ส่งอีเมลให้ผู้เกี่ยวข้อง</button><button class="btn ghost" onclick="copyDocLink()">🔗 คัดลอกลิงก์เอกสาร</button><button class="btn ghost" onclick="closeDoc()">ปิด</button></div>
+  <div class="no-print" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><input id="sendEmail" placeholder="อีเมลผู้รับ เช่น accounting@example.com" style="max-width:320px"><input id="sendLine" placeholder="ชื่อผู้รับ / หมายเหตุ (สำหรับส่งต่อ LINE)" style="max-width:320px"></div>`;
+  if(kind==='invoice') return head('🧾 ใบแจ้งหนี้ / ใบเสร็จ',`เลขที่ ${o.no} • วันที่ ${o.date}`)+`<p><b>ลูกค้า:</b> ${o.customer}<br><b>ช่องทาง:</b> ${o.channel||''} • <b>สถานะ:</b> ${o.status}</p>`+table(['สินค้า','จำนวน','ยอด'],[[o.product,o.qty+' '+(o.unit||''),money(o.total)]])+`<p style="text-align:right"><b>ยอดรวม: ${money(o.total)}</b></p>`+foot;
+  if(kind==='delivery') return head('🚚 ใบส่งของ',`เลขที่ ${o.no} • วันที่ ${o.date}`)+`<p><b>ผู้รับ:</b> ${o.customer}<br><b>ที่อยู่จัดส่ง:</b> ดูจากชีต Customers</p>`+table(['สินค้า','จำนวน','หมายเหตุ'],[[o.product,o.qty+' '+(o.unit||''),'ตรวจสอบสินค้าก่อนเซ็นรับ']])+`<br><p>ผู้ส่ง ______________ &nbsp;&nbsp; ผู้รับ ______________ &nbsp;&nbsp; วันที่ ______________</p>`+foot;
+  if(kind==='production'){const p=prod[0]||{product:o.product,qty:o.qty,worker:'คนผลิต กะเช้า',shift:'กะเช้า',material:'เบิกใช้ผลิต: พริกแห้ง 5 กก.'};return head('🏭 ใบสั่งผลิต',`วันที่ ${p.date||o.date}`)+table(['สินค้าที่ผลิต','จำนวน','คนผลิต','กะ','เบิกใช้ผลิต'],[[p.product,p.qty,p.worker||'',p.shift||'',p.material||'']])+`<p>หมายเหตุ: เบิกวัตถุดิบแล้ว ระบบจะตัดสต็อกอัตโนมัติเมื่อเชื่อม Sheet</p>`+foot;}
+  if(kind==='requisition') return head('📦 ใบเบิกวัตถุดิบ',`วันที่ ${o.date}`)+table(['วัตถุดิบ','เบิก','คงเหลือหลังเบิก'],stock.slice(0,3).map(s=>[s.name,'—',s.qty+' '+s.unit]))+`<p>ผู้เบิก ______________ &nbsp;&nbsp; ผู้อนุมัติ (เจ้าของ) ______________</p>`+foot;
+  return head('🧮 สรุปยอดเดือน 2026-11','สำหรับส่งต่อสำนักงานบัญชี')+table(['เดือน','รายรับ','รายจ่าย','กำไร','สถานะ'],dataFor('Accounting').map(a=>[a.month,money(a.income),money(a.expense),money(Number(a.income)-Number(a.expense)),a.locked?'ล็อคแล้ว':'รอคอนเฟิร์ม']))+`<p>แนบ: ไฟล์ CSV ออเดอร์เดือนนี้ (ปุ่มส่งออกในเมนูบัญชี) • เอกสารนี้ใช้แทนกระดาษได้</p>`+foot;
+}
+function openDoc(kind){document.getElementById('docPaper').innerHTML=docHTML(kind);document.getElementById('docModal').classList.add('open');window._docKind=kind;}
+function closeDoc(){document.getElementById('docModal').classList.remove('open');}
+function sendDocEmail(){
+  const email=(document.getElementById('sendEmail')||{}).value||'';
+  if(!email) return alert('ใส่อีเมลผู้รับก่อน เช่น สำนักงานบัญชี');
+  if(!API){toast('โหมดทดลอง: จำลองส่งอีเมลถึง '+email+' แล้ว (เชื่อม Sheet แล้วจะส่งจริงผ่าน Gmail)');return;}
+  fetch(API,{method:'POST',body:JSON.stringify({action:'sendDoc',kind:window._docKind||'invoice',to:email,note:(document.getElementById('sendLine')||{}).value||''})}).then(()=>toast('ส่งอีเมลแล้วถึง '+email)).catch(e=>toast('ส่งไม่สำเร็จ: '+e.message));
+}
+
+function downloadDocPNG(){
+  const el=document.getElementById('docPaper'); if(!el) return alert('เปิดเอกสารก่อน');
+  // ซ่อนปุ่มในภาพก่อนแคป
+  const hiders=el.querySelectorAll('.no-print'); hiders.forEach(e=>e.style.display='none');
+  const w=el.scrollWidth, h=el.scrollHeight;
+  const clone=el.cloneNode(true); clone.querySelectorAll('.no-print').forEach(e=>e.remove());
+  const css=`<style>*{box-sizing:border-box;font-family:Tahoma,sans-serif;color:#111}table{width:100%;border-collapse:collapse;font-size:13px}th{background:#22123e;color:#fff;padding:8px}td{padding:8px;border-bottom:1px solid #ddd}hr{border:0;border-top:1px solid #ccc}</style>`;
+  const data=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="width:${w}px;padding:24px;background:#fff">${css}${clone.innerHTML}</div></foreignObject></svg>`;
+  const url='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(data);
+  const img=new Image();
+  img.onload=()=>{
+    const scale=2; const c=document.createElement('canvas'); c.width=w*scale; c.height=h*scale;
+    const ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height); ctx.drawImage(img,0,0,c.width,c.height);
+    c.toBlob(b=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='OK1-'+(window._docKind||'doc')+'-'+new Date().toISOString().slice(0,10)+'.png'; a.click(); toast('เซฟ PNG แล้ว ส่งต่อใน LINE / แชทได้เลย'); },'image/png');
+    hiders.forEach(e=>e.style.display='');
+  };
+  img.onerror=()=>{ hiders.forEach(e=>e.style.display=''); alert('เซฟ PNG ไม่สำเร็จ ลองใช้ปุ่ม พิมพ์ / เซฟเป็น PDF แทน'); };
+  img.src=url;
+}
+function copyDocLink(){
+  const link=location.href.split('#')[0]+'#doc='+(window._docKind||'invoice');
+  navigator.clipboard.writeText(link).then(()=>toast('คัดลอกลิงก์เอกสารแล้ว ส่งต่อให้ผู้เกี่ยวข้องได้เลย'));
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDoc();});
+
+render();}
+function saveApi(){const v=document.getElementById('apiUrl').value.trim();if(!v)return alert('วาง URL Apps Script ก่อน');localStorage.setItem('ok1_api',v);API=v;document.getElementById('conn').textContent='● เชื่อม Google Sheet แล้ว';toast('บันทึก URL แล้ว กำลังโหลดข้อมูลจริง...');loadAll();}
+async function loadAll(){
+  if(!API) return;
+  try{const r=await fetch(API+'?action=getAll');const j=await r.json();if(j.ok&&j.data){LIVE=j.data;document.getElementById('conn').textContent='● เชื่อม Google Sheet แล้ว';render();}}catch(e){toast('เชื่อม Sheet ไม่สำเร็จ: '+e.message);}
+}
+function dataFor(key){ if(LIVE&&LIVE[key]&&LIVE[key].length) return LIVE[key]; return DEMO[key]||[]; }
+function badge(s){
+  const m={'รอคอนเฟิร์ม':'warn','รอผลิต':'warn','ส่งแล้ว':'info','สำเร็จ':'ok','สำเร็จ ':'ok','ยกเลิก':'bad','ใช้งาน':'ok','พักการสั่งซื้อ':'bad','วัตถุดิบใกล้หมด':'bad','ปกติ':'ok','ล็อคแล้ว':'bad','ส่งออก':'info'};
+  return `<span class="badge ${m[s]||'gray'}">${s}</span>`;
+}
+function money(n){return Number(n||0).toLocaleString('th-TH')+' ฿';}
+function table(heads,rows){return `<div style="overflow-x:auto"><table><tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</table></div>`;}
+function filterRows(rows,fields){let out=rows;if(FILTER.q){const q=FILTER.q.toLowerCase();out=out.filter(r=>fields.some(f=>String(r[f]||'').toLowerCase().includes(q)));}if(FILTER.status!=='ทั้งหมด'){out=out.filter(r=>Object.values(r).includes(FILTER.status));}return out;}
+function searchBar(statuses){return `<div class="toolbar"><input placeholder="🔍 ค้นหา..." value="${FILTER.q}" oninput="FILTER.q=this.value;render()"><select style="max-width:180px" onchange="FILTER.status=this.value;render()"><option>ทั้งหมด</option>${statuses.map(s=>`<option ${FILTER.status===s?'selected':''}>${s}</option>`).join('')}</select><button class="btn ghost" onclick="FILTER={q:'',status:'ทั้งหมด'};render()">ล้างตัวกรอง</button></div>`;}
+
+const NAV=[
+ {k:'dashboard',t:'แดชบอร์ด',i:'📊',g:'หลัก'},
+ {k:'orders',t:'ออเดอร์ / ขาย',i:'🧾',g:'ขาย'},
+ {k:'customers',t:'ลูกค้า',i:'👥',g:'ขาย'},
+ {k:'products',t:'สินค้า',i:'🥫',g:'สินค้า'},
+ {k:'stock',t:'สต็อกวัตถุดิบ',i:'📦',g:'สินค้า'},
+ {k:'production',t:'ผลิต',i:'🏭',g:'ผลิต'},
+ {k:'suppliers',t:'ซัพพลายเออร์',i:'🚚',g:'ซื้อ'},
+ {k:'accounting',t:'บัญชี / ล็อคยอดเดือน',i:'🧮',g:'บัญชี'},
+ {k:'users',t:'ผู้ใช้ / บทบาท',i:'👤',g:'ตั้งค่า'},
+ {k:'settings',t:'ตั้งค่าเชื่อม Sheet',i:'⚙️',g:'ตั้งค่า'},
+];
+function renderNav(){let g='';document.getElementById('nav').innerHTML=NAV.map(n=>{let h='';if(n.g!==g){g=n.g;h=`<h4>${g.toUpperCase()}</h4>`;}return h+`<button class="${CURRENT===n.k?'active':''}" onclick="go('${n.k}')">${n.i} ${n.t}</button>`;}).join('');}
+function go(k){CURRENT=k;render();}
+function render(){renderNav();const el=document.getElementById('page');if(CURRENT==='dashboard')el.innerHTML=pageDashboard();else if(CURRENT==='orders')el.innerHTML=pageOrders();else if(CURRENT==='products')el.innerHTML=pageProducts();else if(CURRENT==='stock')el.innerHTML=pageStock();else if(CURRENT==='customers')el.innerHTML=pageCustomers();else if(CURRENT==='suppliers')el.innerHTML=pageSuppliers();else if(CURRENT==='production')el.innerHTML=pageProduction();else if(CURRENT==='accounting')el.innerHTML=pageAccounting();else if(CURRENT==='users')el.innerHTML=pageUsers();else if(CURRENT==='settings')el.innerHTML=pageSettings();window.scrollTo(0,0);}
+
+function pageDashboard(){
+ const d=DEMO.Dashboard;const orders=dataFor('Orders');const stock=dataFor('Stock');
+ const low=stock.filter(s=>String(s.status||'').includes('ใกล้หมด'));
+ return `<div class="topbar"><div><h1>📊 แดชบอร์ด</h1><div class="muted">ภาพรวมวันนี้ • ${new Date().toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'})}</div></div><button class="btn gold" onclick="go('orders')">+ เพิ่มออเดอร์</button></div>
+ <div class="kpis"><div class="kpi"><small>รายรับเดือนนี้</small><b>${money(d.income)}</b></div><div class="kpi"><small>รายจ่ายเดือนนี้</small><b>${money(d.expense)}</b></div><div class="kpi"><small>กำไร (โดยประมาณ)</small><b>${money(d.income-d.expense)}</b></div><div class="kpi"><small>ออเดอร์ทั้งหมด</small><b>${orders.length} รายการ</b></div></div>
+ <div class="card"><h3>⚠️ วัตถุดิบใกล้หมด (${low.length})</h3>${low.length?table(['วัตถุดิบ','คงเหลือ','ขั้นต่ำ','สถานะ'],low.map(s=>[s.name,s.qty+' '+s.unit,s.min+' '+s.unit,badge(s.status)])):'<p>ไม่มีวัตถุดิบใกล้หมด</p>'}</div>
+ <div class="card"><h3>🧾 ออเดอร์ล่าสุด</h3>${table(['วันที่','เลขที่','ลูกค้า','สินค้า','จำนวน','ยอด','สถานะ'],orders.slice(0,5).map(o=>[o.date,o.no,o.customer,o.product,o.qty+' '+o.unit,money(o.total),badge(o.status)]))}</div>
+ <div class="card"><h3>ℹ️ วิธีใช้งาน</h3><p class="muted">1) ไปหน้า ตั้งค่าเชื่อม Sheet แล้ววาง URL Apps Script → 2) ข้อมูลจะดึงจาก Sheet จริงทันที → 3) ถ้ายังไม่เชื่อม ระบบจะแสดงข้อมูลทดลอง (Demo) ให้ทดสอบก่อนได้</p></div>`;
+}
+function pageOrders(){
+ const rows=filterRows(dataFor('Orders'),['customer','product','no','status']);
+ return `<h1>🧾 ออเดอร์ / ขาย</h1><p class="muted">ช่องทาง: เงินสด / เครดิต • สถานะ: รอคอนเฟิร์ม → รอผลิต → ส่งแล้ว → สำเร็จ</p>${searchBar(['รอคอนเฟิร์ม','รอผลิต','ส่งแล้ว','สำเร็จ','ยกเลิก'])}
+ <div class="card"><h3>➕ เพิ่มออเดอร์ใหม่</h3><div class="row r4"><div><label>ลูกค้า</label><input id="oCustomer" placeholder="เช่น อารีย์"></div><div><label>สินค้า</label><select id="oProduct"><option>น้ำพริกเผาโฮมเมด</option><option>หมูหยองพรีเมียม</option><option>เครื่องปรุงไส้กรอก</option></select></div><div><label>จำนวน</label><input id="oQty" type="number" value="10"></div><div><label>ช่องทาง</label><select id="oChannel"><option>เงินสด</option><option>เครดิต</option></select></div></div><br><button class="btn" onclick="addOrder()">บันทึกออเดอร์</button> <span id="oMsg"></span></div>
+ <div class="card"><h3>รายการทั้งหมด (${rows.length})</h3>${table(['วันที่','เลขที่','ลูกค้า','สินค้า','จำนวน','ยอด','ช่องทาง','สถานะ','จัดการ'],rows.map((o,i)=>[o.date,o.no,o.customer,o.product,o.qty+' '+(o.unit||''),money(o.total),o.channel||'',badge(o.status),`<button class="btn small" onclick="changeStatus('Orders',${i})">เลื่อนสถานะ →</button>`]))}</div>`;
+}
+function pageProducts(){
+ const rows=filterRows(dataFor('Products'),['name','code']);
+ return `<h1>🥫 สินค้า</h1>${searchBar(['ใช้งาน'])}<div class="card"><h3>รายการสินค้า (${rows.length})</h3>${table(['รหัส','สินค้า','หน่วย','ราคา','สต็อก','สถานะ'],rows.map(p=>[p.code,p.name,p.unit,money(p.price),p.stock+' '+p.unit,badge(p.status)]))}</div>
+ <div class="card"><h3>➕ เพิ่มสินค้า</h3><div class="row r3"><div><label>ชื่อสินค้า</label><input id="pName" placeholder="เช่น น้ำพริกเผา"></div><div><label>ราคา</label><input id="pPrice" type="number" value="150"></div><div><label>หน่วย</label><input id="pUnit" value="กระปุก"></div></div><br><button class="btn" onclick="addRow('Products')">บันทึกสินค้า</button></div>`;
+}
+function pageStock(){
+ const rows=filterRows(dataFor('Stock'),['name','code','status']);
+ return `<h1>📦 สต็อกวัตถุดิบ</h1><p class="muted">น้ำหนักรวม • วันหมดอายุ • แจ้งเตือนวัตถุดิบใกล้หมดอัตโนมัติ</p>${searchBar(['ปกติ','วัตถุดิบใกล้หมด'])}<div class="card"><h3>รายการวัตถุดิบ (${rows.length})</h3>${table(['รหัส','วัตถุดิบ','คงเหลือ','ขั้นต่ำ','วันหมดอายุ','สถานะ','จัดการ'],rows.map((s,i)=>[s.code,s.name,s.qty+' '+s.unit,s.min+' '+s.unit,s.exp||'-',badge(s.status),`<button class="btn small gold" onclick="useStock(${i})">เบิกใช้ผลิต</button>`]))}</div>`;
+}
+function pageCustomers(){
+ const rows=filterRows(dataFor('Customers'),['name','province','type']);
+ return `<h1>👥 ลูกค้า</h1>${searchBar(['ปลีก','เครดิต','ใช้งาน'])}<div class="card"><h3>รายชื่อลูกค้า (${rows.length})</h3>${table(['ชื่อ','ประเภท','เบอร์หลัก','จังหวัด','ที่อยู่','สถานะ'],rows.map(c=>[c.name,c.type,c.phone||'',c.province||'',c.addr||'',badge(c.status||'ใช้งาน')]))}</div>
+ <div class="card"><h3>➕ เพิ่มลูกค้า</h3><div class="row r3"><div><label>ชื่อ</label><input id="cName"></div><div><label>ประเภท</label><select id="cType"><option>ปลีก</option><option>เครดิต</option></select></div><div><label>จังหวัด</label><input id="cProv" value="กรุงเทพมหานคร"></div></div><br><button class="btn" onclick="addRow('Customers')">บันทึกลูกค้า</button></div>`;
+}
+function pageSuppliers(){
+ const rows=filterRows(dataFor('Suppliers'),['name','status']);
+ return `<h1>🚚 ซัพพลายเออร์</h1>${searchBar(['ใช้งาน','พักการสั่งซื้อ'])}<div class="card"><h3>รายชื่อ (${rows.length})</h3>${table(['ชื่อ','เบอร์หลัก','เครดิต','สถานะ'],rows.map(s=>[s.name,s.phone||'',s.credit||'',badge(s.status)]))}</div>`;
+}
+function pageProduction(){
+ const rows=filterRows(dataFor('Production'),['product','worker','status']);
+ return `<h1>🏭 ผลิต</h1><p class="muted">เบิกใช้ผลิต → ตัดสต็อกวัตถุดิบอัตโนมัติ (เมื่อเชื่อม Sheet)</p>${searchBar(['รอผลิต','สำเร็จ'])}
+ <div class="card"><h3>➕ สั่งผลิตใหม่ + เบิกวัตถุดิบ</h3><div class="row r3"><div><label>สินค้าที่จะผลิต</label><select id="prProduct"><option>น้ำพริกเผาโฮมเมด</option><option>หมูหยองพรีเมียม</option><option>เครื่องปรุงไส้กรอก</option></select></div><div><label>จำนวน</label><input id="prQty" type="number" value="50"></div><div><label>กะ</label><select id="prShift"><option>กะเช้า</option><option>กะบ่าย</option></select></div></div><br><button class="btn" onclick="addProduction()">สั่งผลิต + เบิกวัตถุดิบ</button> <span id="prMsg"></span></div>
+ <div class="card"><h3>คิวผลิต (${rows.length})</h3>${table(['วันที่','สินค้า','จำนวน','คนผลิต','กะ','เบิกใช้ผลิต','สถานะ'],rows.map(p=>[p.date,p.product,p.qty+' '+(p.unit||''),p.worker||'',p.shift||'',p.material||'',badge(p.status)]))}</div>`;
+}
+function pageAccounting(){
+ const rows=dataFor('Accounting');
+ const locked=rows.find(r=>String(r.month)==='2026-11');
+ return `<h1>🧮 บัญชี / ล็อคยอดเดือน</h1>
+ ${ROLE==='accounting'?'<div class="card"><p>👁️ บทบาทสำนักงานบัญชี: ดูได้อย่างเดียว แก้ไขไม่ได้</p></div>':''}
+ <div class="card"><h3>สรุปตามเดือน</h3>${table(['เดือน','รายรับ','รายจ่าย','กำไร','สถานะ','หมายเหตุ'],rows.map(a=>[a.month,money(a.income),money(a.expense),money(Number(a.income)-Number(a.expense)),a.locked?badge('ล็อคแล้ว'):badge('รอคอนเฟิร์ม'),a.note||'']))}</div>
+ <div class="card"><h3>🔒 ล็อคยอดเดือน 2026-11</h3>${locked&&locked.locked?'<div class="lockbox"><b>ล็อคแล้ว</b> — เดือนนี้แก้ไขไม่ได้แล้ว เฉพาะเจ้าของเท่านั้นที่ปลดล็อคได้</div>':`<p>เฉพาะ <b>เจ้าของ</b> เท่านั้นที่ล็อคได้ หลังล็อคจะแก้ไขออเดอร์/บัญชีของเดือนนั้นไม่ได้</p><button class="btn" ${ROLE!=='owner'?'disabled':''} onclick="lockMonth()">🔒 ล็อคยอดเดือนนี้</button> ${ROLE!=='owner'?'<small>คุณเป็นบทบาท '+ROLE+' จึงล็อคไม่ได้</small>':''}`}</div>
+ <div class="card"><h3>📤 ส่งออกให้สำนักงานบัญชี</h3><button class="btn gold" onclick="exportCSV()">⬇️ ดาวน์โหลด CSV เดือนนี้</button> <span id="exMsg"></span></div>`;
+}
+function pageUsers(){
+ return `<h1>👤 ผู้ใช้ / บทบาท</h1><div class="card">${table(['ชื่อ','บทบาท','สิทธิ์'],DEMO.Users.map(u=>[u.name,u.role,u.note]))}</div><div class="card"><h3>ลองสลับบทบาท</h3><p class="muted">เลือกบทบาทที่มุมขวาบนของเว็บ แล้วลองเข้าเมนู บัญชี / ล็อคยอดเดือน ดู — ถ้าไม่ใช่เจ้าของ ปุ่มล็อคจะกดไม่ได้</p></div>`;
+}
+function pageSettings(){
+ return `<h1>⚙️ ตั้งค่าเชื่อม Google Sheet</h1>
+ <div class="config"><b>ขั้นตอนเชื่อมจริง (ทำครั้งเดียว):</b><ol><li>เปิด Google Sheet 1 ไฟล์ → Extensions → Apps Script</li><li>วางโค้ดจากไฟล์ <b>OK1-ERP-Code.gs</b> → รัน <b>setupSheets()</b> ครั้งเดียว</li><li>Deploy → New deployment → Web app → Execute as: Me / Who has access: Anyone → Deploy</li><li>คัดลอกลิงก์ .../exec มาวางด้านล่าง → กดบันทึก</li></ol>
+ <label>URL Web App (Apps Script)</label><input id="apiUrl" value="${API}" placeholder="https://script.google.com/macros/s/XXXX/exec">
+ <br><br><button class="btn gold" onclick="saveApi()">บันทึก + โหลดข้อมูลจริง</button> <button class="btn ghost" onclick="localStorage.removeItem('ok1_api');API='';LIVE=null;document.getElementById('conn').textContent='● โหมดทดลอง (Demo)';render();toast('กลับสู่โหมดทดลองแล้ว')">กลับไปโหมดทดลอง</button></div>
+ <div class="card"><h3>โครง Sheet ที่ต้องมี (8 ชีต)</h3><p class="muted">Dashboard | Orders | Products | Stock | Customers | Suppliers | Production | Accounting — แถวแรกคือชื่อคอลัมน์ ฟังก์ชัน setupSheets() จะสร้างให้เอง</p></div>`;
+}
+// actions (demo + live)
+function addOrder(){
+ const c=document.getElementById('oCustomer').value||'ลูกค้าไม่ระบุ';const p=document.getElementById('oProduct').value;const q=Number(document.getElementById('oQty').value||0);const ch=document.getElementById('oChannel').value;
+ if(!API){DEMO.Orders.unshift({date:new Date().toISOString().slice(0,10),no:'ORD-'+Math.floor(Math.random()*900+100),customer:c,product:p,qty:q,unit:'กระปุก',total:q*150,channel:ch,status:'รอคอนเฟิร์ม'});toast('บันทึกแล้ว (โหมดทดลอง)');render();return;}
+ fetch(API,{method:'POST',body:JSON.stringify({action:'saveOrder',customer:c,product:p,qty:q,channel:ch})}).then(()=>{toast('บันทึกลง Sheet แล้ว');loadAll();});
+}
+function addRow(kind){toast('บันทึกแล้ว (โหมดทดลอง) — เชื่อม Sheet แล้วจะบันทึกลง Sheet จริง');}
+function addProduction(){const p=document.getElementById('prProduct').value;const q=document.getElementById('prQty').value;document.getElementById('prMsg').textContent=' สั่งผลิต '+p+' '+q+' หน่วยแล้ว (ทดลอง) — เชื่อม Sheet แล้วจะตัดสต็อกวัตถุดิบอัตโนมัติ';toast('สั่งผลิตแล้ว');}
+function useStock(i){toast('เบิกใช้ผลิตแล้ว (ทดลอง)');}
+function changeStatus(kind,i){const seq=['รอคอนเฟิร์ม','รอผลิต','ส่งแล้ว','สำเร็จ'];const cur=DEMO.Orders[i].status;const nx=seq[seq.indexOf(cur)+1];if(nx){DEMO.Orders[i].status=nx;toast('เลื่อนสถานะเป็น '+nx);}else toast('ออเดอร์นี้สำเร็จแล้ว');render();}
+function lockMonth(){if(ROLE!=='owner')return alert('เฉพาะเจ้าของเท่านั้น');const r=DEMO.Accounting.find(x=>x.month==='2026-11');if(r)r.locked=true;toast('ล็อคยอดเดือน 2026-11 แล้ว');render();}
+function exportCSV(){const rows=dataFor('Orders');let csv='วันที่,เลขที่,ลูกค้า,สินค้า,จำนวน,ยอด,สถานะ\n'+rows.map(o=>[o.date,o.no,o.customer,o.product,o.qty,o.total,o.status].join(',')).join('\n');const b=new Blob(['\ufeff'+csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='OK1-Orders-2026-11.csv';a.click();document.getElementById('exMsg').textContent=' ดาวน์โหลดแล้ว';}
+render();
+if(API){document.getElementById('conn').textContent='● เชื่อม Google Sheet แล้ว';loadAll();}
+</script></body></html>
