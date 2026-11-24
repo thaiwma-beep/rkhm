@@ -31,7 +31,8 @@ input,select,textarea{padding:9px 10px;border:1px solid #ccc;border-radius:9px;w
 </style></head><body>
 <header><div><b>OK1 <span>ERP</span></b> &nbsp;ระบบร้านผลิตอาหาร — น้ำพริกเผา • หมูหยอง • ไส้กรอก</div>
 <div class="flex"><span id="conn" class="pill">● โหมดทดลอง (Demo)</span><select id="roleSel" style="width:auto" onchange="setRole(this.value)"><option value="owner">บทบาท: เจ้าของ</option><option value="admin">แอดมิน</option><option value="staff">พนักงาน / คนผลิต</option><option value="accounting">สำนักงานบัญชี</option></select></div></header>
-<div style="max-width:1440px;margin:12px auto 0;padding:0 18px"><div class="card no-print" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between"><div><b>🌿 Paperless — เอกสารไร้กระดาษ</b> <span class="muted">กดที่เอกสารใดก็ได้ → ดูตัวอย่าง → พิมพ์ / PDF / PNG / ส่งอีเมล / ส่งลิงก์ ให้ผู้เกี่ยวข้อง ไม่ต้องปริ้นเก็บแฟ้ม</span></div><div class="flex"><button class="btn gold small" onclick="openDoc('invoice')">🧾 ใบแจ้งหนี้ / ใบเสร็จ</button><button class="btn small" onclick="openDoc('delivery')">🚚 ใบส่งของ</button><button class="btn small" onclick="openDoc('production')">🏭 ใบสั่งผลิต</button><button class="btn small" onclick="openDoc('requisition')">📦 ใบเบิกวัตถุดิบ</button><button class="btn small" onclick="openDoc('monthly')">🧮 สรุปยอดเดือน</button></div></div></div>
+<div style="max-width:1440px;margin:12px auto 0;padding:0 18px"><div class="card no-print" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between"><div><b>🌿 Paperless — เอกสารไร้กระดาษ</b> <span class="muted">กดที่เอกสารใดก็ได้ → ดูตัวอย่าง → พิมพ์ / PDF / PNG / ส่งอีเมล / ส่งลิงก์</span></div><div class="flex"><button class="btn gold small" onclick="openDoc('invoice')">🧾 ใบแจ้งหนี้ / ใบเสร็จ</button><button class="btn small" onclick="openDoc('delivery')">🚚 ใบส่งของ</button><button class="btn small" onclick="openDoc('production')">🏭 ใบสั่งผลิต</button><button class="btn small" onclick="openDoc('requisition')">📦 ใบเบิกวัตถุดิบ</button><button class="btn small" onclick="openDoc('monthly')">🧮 สรุปยอดเดือน</button></div></div></div>
+<div id="globalApiBar" class="no-print" style="max-width:1440px;margin:12px auto 0;padding:0 18px"><div class="card" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;border:2px solid #e6b800;background:#fffbe6"><div style="flex:1;min-width:280px"><b>🔌 เชื่อม Google Sheet</b> <span id="apiState" style="font-size:13px;color:#666">— ยังไม่ได้ใส่ URL API (จึงแสดงข้อมูลทดลอง)</span><br><span style="font-size:12px;color:#888">วางลิงก์ .../exec จาก Apps Script ตรงนี้ กดบันทึก แล้วเว็บจะจำไว้ในเครื่องนี้</span></div><input id="globalApiUrl" placeholder="https://script.google.com/macros/s/XXXX/exec" style="flex:2;min-width:280px"><button class="btn gold" onclick="saveApiGlobal()">💾 บันทึก + ทดสอบเชื่อมต่อ</button><button class="btn ghost" onclick="testApi()">🔍 ทดสอบอีกครั้ง</button></div><div id="apiError" style="display:none;margin-top:8px;background:#fde8e8;border:1px solid #f5a3a3;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.7"></div></div>
 <div class="layout">
 <nav id="nav"></nav>
 <main>
@@ -91,60 +92,26 @@ let API=localStorage.getItem('ok1_api')||'';
 let LIVE=null; // ข้อมูลจริงจาก Sheet ถ้าเชื่อมแล้ว
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',2600);}
-function setRole(v){ROLE=v;toast('เปลี่ยนบทบาทเป็น: '+v);
-// ===== PAPERLESS: เอกสาร + พิมพ์ + ส่งต่อ =====
-function currentOrder(){ const o=dataFor('Orders'); return o[0]||{date:'2026-11-25',no:'ORD-001',customer:'อารีย์',product:'น้ำพริกเผาโฮมเมด',qty:50,unit:'กระปุก',total:7500,channel:'เงินสด',status:'รอคอนเฟิร์ม'}; }
-function docHTML(kind){
-  const o=currentOrder(); const stock=dataFor('Stock'); const prod=dataFor('Production');
-  const head=(title,sub)=>`<div style="display:flex;justify-content:space-between"><div><h2>OK1 ERP</h2><div style="color:#666;font-size:13px">ร้านผลิตอาหาร — น้ำพริกเผา • หมูหยอง • ไส้กรอก</div></div><div style="text-align:right"><b>${title}</b><br><span style="color:#666;font-size:13px">${sub}</span></div></div><hr>`;
-  const foot=`<hr><p style="font-size:12px;color:#666">เอกสารอิเล็กทรอนิกส์ (Paperless) — สร้างจากระบบ OK1 ERP • ตรวจสอบได้จาก Google Sheet ต้นฉบับ • ไม่ต้องพิมพ์เก็บแฟ้ม ถ้าต้องการสำเนาให้ใช้ปุ่ม พิมพ์ / เซฟ PDF ด้านล่าง</p>
-  <div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn" onclick="window.print()">🖨️ พิมพ์ / เซฟเป็น PDF</button><button class="btn gold" onclick="downloadDocPNG()">🖼️ เซฟเป็น PNG</button><button class="btn gold" onclick="sendDocEmail()">📧 ส่งอีเมลให้ผู้เกี่ยวข้อง</button><button class="btn ghost" onclick="copyDocLink()">🔗 คัดลอกลิงก์เอกสาร</button><button class="btn ghost" onclick="closeDoc()">ปิด</button></div>
-  <div class="no-print" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><input id="sendEmail" placeholder="อีเมลผู้รับ เช่น accounting@example.com" style="max-width:320px"><input id="sendLine" placeholder="ชื่อผู้รับ / หมายเหตุ (สำหรับส่งต่อ LINE)" style="max-width:320px"></div>`;
-  if(kind==='invoice') return head('🧾 ใบแจ้งหนี้ / ใบเสร็จ',`เลขที่ ${o.no} • วันที่ ${o.date}`)+`<p><b>ลูกค้า:</b> ${o.customer}<br><b>ช่องทาง:</b> ${o.channel||''} • <b>สถานะ:</b> ${o.status}</p>`+table(['สินค้า','จำนวน','ยอด'],[[o.product,o.qty+' '+(o.unit||''),money(o.total)]])+`<p style="text-align:right"><b>ยอดรวม: ${money(o.total)}</b></p>`+foot;
-  if(kind==='delivery') return head('🚚 ใบส่งของ',`เลขที่ ${o.no} • วันที่ ${o.date}`)+`<p><b>ผู้รับ:</b> ${o.customer}<br><b>ที่อยู่จัดส่ง:</b> ดูจากชีต Customers</p>`+table(['สินค้า','จำนวน','หมายเหตุ'],[[o.product,o.qty+' '+(o.unit||''),'ตรวจสอบสินค้าก่อนเซ็นรับ']])+`<br><p>ผู้ส่ง ______________ &nbsp;&nbsp; ผู้รับ ______________ &nbsp;&nbsp; วันที่ ______________</p>`+foot;
-  if(kind==='production'){const p=prod[0]||{product:o.product,qty:o.qty,worker:'คนผลิต กะเช้า',shift:'กะเช้า',material:'เบิกใช้ผลิต: พริกแห้ง 5 กก.'};return head('🏭 ใบสั่งผลิต',`วันที่ ${p.date||o.date}`)+table(['สินค้าที่ผลิต','จำนวน','คนผลิต','กะ','เบิกใช้ผลิต'],[[p.product,p.qty,p.worker||'',p.shift||'',p.material||'']])+`<p>หมายเหตุ: เบิกวัตถุดิบแล้ว ระบบจะตัดสต็อกอัตโนมัติเมื่อเชื่อม Sheet</p>`+foot;}
-  if(kind==='requisition') return head('📦 ใบเบิกวัตถุดิบ',`วันที่ ${o.date}`)+table(['วัตถุดิบ','เบิก','คงเหลือหลังเบิก'],stock.slice(0,3).map(s=>[s.name,'—',s.qty+' '+s.unit]))+`<p>ผู้เบิก ______________ &nbsp;&nbsp; ผู้อนุมัติ (เจ้าของ) ______________</p>`+foot;
-  return head('🧮 สรุปยอดเดือน 2026-11','สำหรับส่งต่อสำนักงานบัญชี')+table(['เดือน','รายรับ','รายจ่าย','กำไร','สถานะ'],dataFor('Accounting').map(a=>[a.month,money(a.income),money(a.expense),money(Number(a.income)-Number(a.expense)),a.locked?'ล็อคแล้ว':'รอคอนเฟิร์ม']))+`<p>แนบ: ไฟล์ CSV ออเดอร์เดือนนี้ (ปุ่มส่งออกในเมนูบัญชี) • เอกสารนี้ใช้แทนกระดาษได้</p>`+foot;
-}
-function openDoc(kind){document.getElementById('docPaper').innerHTML=docHTML(kind);document.getElementById('docModal').classList.add('open');window._docKind=kind;}
-function closeDoc(){document.getElementById('docModal').classList.remove('open');}
-function sendDocEmail(){
-  const email=(document.getElementById('sendEmail')||{}).value||'';
-  if(!email) return alert('ใส่อีเมลผู้รับก่อน เช่น สำนักงานบัญชี');
-  if(!API){toast('โหมดทดลอง: จำลองส่งอีเมลถึง '+email+' แล้ว (เชื่อม Sheet แล้วจะส่งจริงผ่าน Gmail)');return;}
-  fetch(API,{method:'POST',body:JSON.stringify({action:'sendDoc',kind:window._docKind||'invoice',to:email,note:(document.getElementById('sendLine')||{}).value||''})}).then(()=>toast('ส่งอีเมลแล้วถึง '+email)).catch(e=>toast('ส่งไม่สำเร็จ: '+e.message));
-}
+function setRole(v){ROLE=v;toast('เปลี่ยนบทบาทเป็น: '+v);render();}
+function syncApiInputs(){const a=document.getElementById('globalApiUrl');if(a)a.value=API||'';const b=document.getElementById('apiUrl');if(b)b.value=API||'';const s=document.getElementById('apiState');if(s)s.textContent=API?('URL ที่จำไว้: '+API.slice(0,60)+'...'):'— ยังไม่ได้ใส่ URL API (จึงแสดงข้อมูลทดลอง)';}
+function showApiError(msg){const e=document.getElementById('apiError');if(!e)return;e.style.display='block';e.innerHTML='<b>❌ เชื่อมไม่สำเร็จ:</b> '+msg+'<br>เช็ค 3 อย่าง: 1) Deploy แบบ <b>Anyone</b> 2) Deploy ใหม่หลังแก้โค้ด (New deployment) 3) ลิงก์ต้องลงท้าย <b>/exec</b> ไม่ใช่ /dev';}
+function hideApiError(){const e=document.getElementById('apiError');if(e)e.style.display='none';}
+function saveApi(){const v=(document.getElementById('apiUrl')||{}).value||'';return saveApiValue(v.trim());}
+function saveApiGlobal(){const v=(document.getElementById('globalApiUrl')||{}).value||'';return saveApiValue(v.trim());}
+function saveApiValue(v){if(!v)return alert('วาง URL Apps Script ก่อน — ต้องเป็นลิงก์ที่ลงท้ายด้วย /exec');if(!v.includes('/exec'))return alert('ลิงก์นี้ไม่ถูกต้อง ต้องลงท้ายด้วย /exec');localStorage.setItem('ok1_api',v);API=v;syncApiInputs();const c=document.getElementById('conn');if(c)c.textContent='● กำลังทดสอบเชื่อมต่อ...';hideApiError();toast('บันทึก URL แล้ว กำลังทดสอบเชื่อมต่อ...');loadAll();}
+function testApi(){if(!API)return alert('ยังไม่ได้ใส่ URL API');loadAll();}
 
-function downloadDocPNG(){
-  const el=document.getElementById('docPaper'); if(!el) return alert('เปิดเอกสารก่อน');
-  // ซ่อนปุ่มในภาพก่อนแคป
-  const hiders=el.querySelectorAll('.no-print'); hiders.forEach(e=>e.style.display='none');
-  const w=el.scrollWidth, h=el.scrollHeight;
-  const clone=el.cloneNode(true); clone.querySelectorAll('.no-print').forEach(e=>e.remove());
-  const css=`<style>*{box-sizing:border-box;font-family:Tahoma,sans-serif;color:#111}table{width:100%;border-collapse:collapse;font-size:13px}th{background:#22123e;color:#fff;padding:8px}td{padding:8px;border-bottom:1px solid #ddd}hr{border:0;border-top:1px solid #ccc}</style>`;
-  const data=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="width:${w}px;padding:24px;background:#fff">${css}${clone.innerHTML}</div></foreignObject></svg>`;
-  const url='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(data);
-  const img=new Image();
-  img.onload=()=>{
-    const scale=2; const c=document.createElement('canvas'); c.width=w*scale; c.height=h*scale;
-    const ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height); ctx.drawImage(img,0,0,c.width,c.height);
-    c.toBlob(b=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='OK1-'+(window._docKind||'doc')+'-'+new Date().toISOString().slice(0,10)+'.png'; a.click(); toast('เซฟ PNG แล้ว ส่งต่อใน LINE / แชทได้เลย'); },'image/png');
-    hiders.forEach(e=>e.style.display='');
-  };
-  img.onerror=()=>{ hiders.forEach(e=>e.style.display=''); alert('เซฟ PNG ไม่สำเร็จ ลองใช้ปุ่ม พิมพ์ / เซฟเป็น PDF แทน'); };
-  img.src=url;
-}
-function copyDocLink(){
-  const link=location.href.split('#')[0]+'#doc='+(window._docKind||'invoice');
-  navigator.clipboard.writeText(link).then(()=>toast('คัดลอกลิงก์เอกสารแล้ว ส่งต่อให้ผู้เกี่ยวข้องได้เลย'));
-}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDoc();});
-
-render();}
-function saveApi(){const v=document.getElementById('apiUrl').value.trim();if(!v)return alert('วาง URL Apps Script ก่อน');localStorage.setItem('ok1_api',v);API=v;document.getElementById('conn').textContent='● เชื่อม Google Sheet แล้ว';toast('บันทึก URL แล้ว กำลังโหลดข้อมูลจริง...');loadAll();}
 async function loadAll(){
-  if(!API) return;
-  try{const r=await fetch(API+'?action=getAll');const j=await r.json();if(j.ok&&j.data){LIVE=j.data;document.getElementById('conn').textContent='● เชื่อม Google Sheet แล้ว';render();}}catch(e){toast('เชื่อม Sheet ไม่สำเร็จ: '+e.message);}
+  if(!API){syncApiInputs();return;}
+  syncApiInputs(); hideApiError();
+  const c=document.getElementById('conn'); if(c)c.textContent='● กำลังทดสอบเชื่อมต่อ...';
+  try{
+    const r=await fetch(API+'?action=getAll');
+    const txt=await r.text(); let j=null; try{j=JSON.parse(txt);}catch(e){}
+    if(!j){ showApiError('เซิร์ฟเวอร์ตอบกลับมาไม่ใช่ JSON — ส่วนใหญ่คือยัง Deploy ไม่เสร็จ หรือ URL ผิด<br>ข้อความที่ได้: '+txt.slice(0,200)); if(c)c.textContent='● เชื่อมไม่สำเร็จ (ดูสาเหตุในกล่องแดง)'; return; }
+    if(!j.ok){ showApiError('Apps Script ตอบว่า: '+(j.error||'unknown')); if(c)c.textContent='● เชื่อมไม่สำเร็จ'; return; }
+    LIVE=j.data; if(c)c.textContent='● เชื่อม Google Sheet แล้ว ✅'; toast('เชื่อม Sheet สำเร็จแล้ว ✅ ข้อมูลตอนนี้มาจาก Sheet จริง'); render();
+  }catch(e){ showApiError('fetch ล้มเหลว: '+e.message+' — มักเกิดจาก Deploy แบบ Anyone ยังไม่เสร็จ'); if(c)c.textContent='● เชื่อมไม่สำเร็จ (ดูสาเหตุในกล่องแดง)'; }
 }
 function dataFor(key){ if(LIVE&&LIVE[key]&&LIVE[key].length) return LIVE[key]; return DEMO[key]||[]; }
 function badge(s){
@@ -242,6 +209,40 @@ function useStock(i){toast('เบิกใช้ผลิตแล้ว (ท�
 function changeStatus(kind,i){const seq=['รอคอนเฟิร์ม','รอผลิต','ส่งแล้ว','สำเร็จ'];const cur=DEMO.Orders[i].status;const nx=seq[seq.indexOf(cur)+1];if(nx){DEMO.Orders[i].status=nx;toast('เลื่อนสถานะเป็น '+nx);}else toast('ออเดอร์นี้สำเร็จแล้ว');render();}
 function lockMonth(){if(ROLE!=='owner')return alert('เฉพาะเจ้าของเท่านั้น');const r=DEMO.Accounting.find(x=>x.month==='2026-11');if(r)r.locked=true;toast('ล็อคยอดเดือน 2026-11 แล้ว');render();}
 function exportCSV(){const rows=dataFor('Orders');let csv='วันที่,เลขที่,ลูกค้า,สินค้า,จำนวน,ยอด,สถานะ\n'+rows.map(o=>[o.date,o.no,o.customer,o.product,o.qty,o.total,o.status].join(',')).join('\n');const b=new Blob(['\ufeff'+csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='OK1-Orders-2026-11.csv';a.click();document.getElementById('exMsg').textContent=' ดาวน์โหลดแล้ว';}
-render();
+
+// ===== PAPERLESS: เอกสาร + พิมพ์ + PDF + PNG + ส่งต่อ =====
+function currentOrder(){ const o=dataFor('Orders'); return o[0]||{date:'2026-11-25',no:'ORD-001',customer:'อารีย์',product:'น้ำพริกเผาโฮมเมด',qty:50,unit:'กระปุก',total:7500,channel:'เงินสด',status:'รอคอนเฟิร์ม'}; }
+function docHTML(kind){
+  const o=currentOrder(); const stock=dataFor('Stock'); const prod=dataFor('Production');
+  const head=(title,sub)=>`<div style="display:flex;justify-content:space-between"><div><h2>OK1 ERP</h2><div style="color:#666;font-size:13px">ร้านผลิตอาหาร — น้ำพริกเผา • หมูหยอง • ไส้กรอก</div></div><div style="text-align:right"><b>${title}</b><br><span style="color:#666;font-size:13px">${sub}</span></div></div><hr>`;
+  const foot=`<hr><p style="font-size:12px;color:#666">เอกสารอิเล็กทรอนิกส์ (Paperless) — สร้างจากระบบ OK1 ERP • ตรวจสอบได้จาก Google Sheet ต้นฉบับ • ไม่ต้องพิมพ์เก็บแฟ้ม</p>
+  <div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn" onclick="window.print()">🖨️ พิมพ์ / เซฟเป็น PDF</button><button class="btn gold" onclick="downloadDocPNG()">🖼️ เซฟเป็น PNG</button><button class="btn gold" onclick="sendDocEmail()">📧 ส่งอีเมลให้ผู้เกี่ยวข้อง</button><button class="btn ghost" onclick="copyDocLink()">🔗 คัดลอกลิงก์เอกสาร</button><button class="btn ghost" onclick="closeDoc()">ปิด</button></div>
+  <div class="no-print" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><input id="sendEmail" placeholder="อีเมลผู้รับ เช่น accounting@example.com" style="max-width:320px"><input id="sendLine" placeholder="ชื่อผู้รับ / หมายเหตุ (สำหรับส่งต่อ LINE)" style="max-width:320px"></div>`;
+  if(kind==='invoice') return head('🧾 ใบแจ้งหนี้ / ใบเสร็จ',`เลขที่ ${o.no} • วันที่ ${o.date}`)+`<p><b>ลูกค้า:</b> ${o.customer}<br><b>ช่องทาง:</b> ${o.channel||''} • <b>สถานะ:</b> ${o.status}</p>`+table(['สินค้า','จำนวน','ยอด'],[[o.product,o.qty+' '+(o.unit||''),money(o.total)]])+`<p style="text-align:right"><b>ยอดรวม: ${money(o.total)}</b></p>`+foot;
+  if(kind==='delivery') return head('🚚 ใบส่งของ',`เลขที่ ${o.no} • วันที่ ${o.date}`)+`<p><b>ผู้รับ:</b> ${o.customer}</p>`+table(['สินค้า','จำนวน','หมายเหตุ'],[[o.product,o.qty+' '+(o.unit||''),'ตรวจสอบสินค้าก่อนเซ็นรับ']])+`<br><p>ผู้ส่ง ______________ &nbsp;&nbsp; ผู้รับ ______________ &nbsp;&nbsp; วันที่ ______________</p>`+foot;
+  if(kind==='production'){const p=prod[0]||{product:o.product,qty:o.qty,worker:'คนผลิต กะเช้า',shift:'กะเช้า',material:'เบิกใช้ผลิต: พริกแห้ง 5 กก.'};return head('🏭 ใบสั่งผลิต',`วันที่ ${p.date||o.date}`)+table(['สินค้าที่ผลิต','จำนวน','คนผลิต','กะ','เบิกใช้ผลิต'],[[p.product,p.qty,p.worker||'',p.shift||'',p.material||'']])+`<p>หมายเหตุ: เบิกวัตถุดิบแล้ว ระบบจะตัดสต็อกอัตโนมัติเมื่อเชื่อม Sheet</p>`+foot;}
+  if(kind==='requisition') return head('📦 ใบเบิกวัตถุดิบ',`วันที่ ${o.date}`)+table(['วัตถุดิบ','เบิก','คงเหลือหลังเบิก'],stock.slice(0,3).map(s=>[s.name,'—',s.qty+' '+s.unit]))+`<p>ผู้เบิก ______________ &nbsp;&nbsp; ผู้อนุมัติ (เจ้าของ) ______________</p>`+foot;
+  return head('🧮 สรุปยอดเดือน 2026-11','สำหรับส่งต่อสำนักงานบัญชี')+table(['เดือน','รายรับ','รายจ่าย','กำไร','สถานะ'],dataFor('Accounting').map(a=>[a.month,money(a.income),money(a.expense),money(Number(a.income)-Number(a.expense)),a.locked?'ล็อคแล้ว':'รอคอนเฟิร์ม']))+`<p>แนบ: ไฟล์ CSV ออเดอร์เดือนนี้ (ปุ่มส่งออกในเมนูบัญชี)</p>`+foot;
+}
+function openDoc(kind){document.getElementById('docPaper').innerHTML=docHTML(kind);document.getElementById('docModal').classList.add('open');window._docKind=kind;}
+function closeDoc(){document.getElementById('docModal').classList.remove('open');}
+function sendDocEmail(){
+  const email=(document.getElementById('sendEmail')||{}).value||'';
+  if(!email) return alert('ใส่อีเมลผู้รับก่อน เช่น สำนักงานบัญชี');
+  if(!API){toast('โหมดทดลอง: จำลองส่งอีเมลถึง '+email+' แล้ว (เชื่อม Sheet แล้วจะส่งจริงผ่าน Gmail)');return;}
+  fetch(API,{method:'POST',body:JSON.stringify({action:'sendDoc',kind:window._docKind||'invoice',to:email,note:(document.getElementById('sendLine')||{}).value||''})}).then(()=>toast('ส่งอีเมลแล้วถึง '+email)).catch(e=>toast('ส่งไม่สำเร็จ: '+e.message));
+}
+function copyDocLink(){const link=location.href.split('#')[0]+'#doc='+(window._docKind||'invoice');navigator.clipboard.writeText(link).then(()=>toast('คัดลอกลิงก์เอกสารแล้ว ส่งต่อให้ผู้เกี่ยวข้องได้เลย'));}
+function downloadDocPNG(){
+  const el=document.getElementById('docPaper'); if(!el) return alert('เปิดเอกสารก่อน');
+  const w=el.scrollWidth||720, h=el.scrollHeight||900;
+  const clone=el.cloneNode(true); clone.querySelectorAll('.no-print').forEach(e=>e.remove());
+  const css=`<style>*{box-sizing:border-box;font-family:Tahoma,sans-serif;color:#111}table{width:100%;border-collapse:collapse;font-size:13px}th{background:#22123e;color:#fff;padding:8px}td{padding:8px;border-bottom:1px solid #ddd}hr{border:0;border-top:1px solid #ccc}</style>`;
+  const data=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="width:${w}px;padding:24px;background:#fff">${css}${clone.innerHTML}</div></foreignObject></svg>`;
+  const url='data:image/svg+xml;charset=utf-8,[STRIPPED]
+  const img=new Image(); img.onload=()=>{const c=document.createElement('canvas');const scale=2;c.width=w*scale;c.height=h*scale;const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);const a=document.createElement('a');a.download='OK1-'+(window._docKind||'doc')+'-'+new Date().toISOString().slice(0,10)+'.png';a.href=c.toDataURL('image/png');a.click();toast('เซฟไฟล์ PNG แล้ว 📸');}; img.onerror=()=>alert('เบราว์เซอร์นี้เซฟ PNG แบบนี้ไม่ได้ ให้ใช้ปุ่ม พิมพ์ / เซฟเป็น PDF แทน'); img.src=url;
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDoc();});
+render(); syncApiInputs();
 if(API){document.getElementById('conn').textContent='● เชื่อม Google Sheet แล้ว';loadAll();}
 </script></body></html>
