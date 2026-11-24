@@ -113,7 +113,21 @@ async function loadAll(){
     LIVE=j.data; if(c)c.textContent='● เชื่อม Google Sheet แล้ว ✅'; toast('เชื่อม Sheet สำเร็จแล้ว ✅ ข้อมูลตอนนี้มาจาก Sheet จริง'); render();
   }catch(e){ showApiError('fetch ล้มเหลว: '+e.message+' — มักเกิดจาก Deploy แบบ Anyone ยังไม่เสร็จ'); if(c)c.textContent='● เชื่อมไม่สำเร็จ (ดูสาเหตุในกล่องแดง)'; }
 }
-function dataFor(key){ if(LIVE&&LIVE[key]&&LIVE[key].length) return LIVE[key]; return DEMO[key]||[]; }
+const KEYMAP={
+ 'ชื่อลูกค้า':'name','ชื่อ':'name','ประเภท':'type','เบอร์หลัก':'phone','จังหวัด':'province','ที่อยู่':'addr','สถานะ':'status',
+ 'รหัส':'code','สินค้า':'name','หน่วย':'unit','ราคา':'price','สต็อก':'stock',
+ 'วัตถุดิบ':'name','จำนวน':'qty','ขั้นต่ำ':'min','วันหมดอายุ':'exp',
+ 'วันที่':'date','เลขที่':'no','ลูกค้า':'customer','ยอด':'total','ช่องทาง':'channel',
+ 'ชื่อซัพพลายเออร์':'name','เครดิต':'credit',
+ 'คนผลิต':'worker','กะ':'shift','เบิกใช้ผลิต':'material',
+ 'เดือน':'month','รายรับ':'income','รายจ่าย':'expense','หมายเหตุ':'note','ล็อคแล้ว':'locked'
+};
+function normalizeRow(r){ const o={}; Object.keys(r||{}).forEach(k=>{ const nk=KEYMAP[k]||k; o[nk]=r[k]; }); 
+  // แปลงวันที่ที่เป็น Date object / ISO ให้เป็น YYYY-MM-DD
+  if(o.date && typeof o.date==='string' && o.date.includes('T')) o.date=o.date.slice(0,10);
+  if(o.date && o.date instanceof Date) o.date=o.date.toISOString().slice(0,10);
+  return o; }
+function dataFor(key){ if(LIVE&&LIVE[key]&&LIVE[key].length) return LIVE[key].map(normalizeRow); return DEMO[key]||[]; }
 function badge(s){
   const m={'รอคอนเฟิร์ม':'warn','รอผลิต':'warn','ส่งแล้ว':'info','สำเร็จ':'ok','สำเร็จ ':'ok','ยกเลิก':'bad','ใช้งาน':'ok','พักการสั่งซื้อ':'bad','วัตถุดิบใกล้หมด':'bad','ปกติ':'ok','ล็อคแล้ว':'bad','ส่งออก':'info'};
   return `<span class="badge ${m[s]||'gray'}">${s}</span>`;
@@ -203,8 +217,29 @@ function addOrder(){
  if(!API){DEMO.Orders.unshift({date:new Date().toISOString().slice(0,10),no:'ORD-'+Math.floor(Math.random()*900+100),customer:c,product:p,qty:q,unit:'กระปุก',total:q*150,channel:ch,status:'รอคอนเฟิร์ม'});toast('บันทึกแล้ว (โหมดทดลอง)');render();return;}
  fetch(API,{method:'POST',body:JSON.stringify({action:'saveOrder',customer:c,product:p,qty:q,channel:ch})}).then(()=>{toast('บันทึกลง Sheet แล้ว');loadAll();});
 }
-function addRow(kind){toast('บันทึกแล้ว (โหมดทดลอง) — เชื่อม Sheet แล้วจะบันทึกลง Sheet จริง');}
-function addProduction(){const p=document.getElementById('prProduct').value;const q=document.getElementById('prQty').value;document.getElementById('prMsg').textContent=' สั่งผลิต '+p+' '+q+' หน่วยแล้ว (ทดลอง) — เชื่อม Sheet แล้วจะตัดสต็อกวัตถุดิบอัตโนมัติ';toast('สั่งผลิตแล้ว');}
+function addRow(kind){
+  // ถ้ายังไม่เชื่อม Sheet -> โหมดทดลองเหมือนเดิม
+  if(!API){toast('บันทึกแล้ว (โหมดทดลอง) — เชื่อม Sheet แล้วจะบันทึกลง Sheet จริง');return;}
+  let sheet='', values=[];
+  if(kind==='Customers'){
+    const name=(document.getElementById('cName')||{}).value||'';
+    const type=(document.getElementById('cType')||{}).value||'ปลีก';
+    const prov=(document.getElementById('cProv')||{}).value||'';
+    if(!name) return alert('ใส่ชื่อลูกค้าก่อน');
+    sheet='Customers'; values=[name,type,'',prov,'','ใช้งาน'];
+  } else if(kind==='Products'){
+    const name=(document.getElementById('pName')||{}).value||'';
+    const price=Number((document.getElementById('pPrice')||{}).value||0);
+    const unit=(document.getElementById('pUnit')||{}).value||'กระปุก';
+    if(!name) return alert('ใส่ชื่อสินค้าก่อน');
+    sheet='Products'; values=['P-'+Date.now().toString().slice(-3),name,unit,price,0,'ใช้งาน'];
+  } else { toast('เมนูนี้ยังบันทึกแบบทดลองอยู่'); return; }
+  fetch(API,{method:'POST',body:JSON.stringify({action:'saveRow',sheet:sheet,values:values})}).then(r=>r.json()).then(j=>{ if(j.ok){toast('บันทึกลง Sheet จริงแล้ว ✅');loadAll();} else toast('บันทึกไม่สำเร็จ: '+(j.error||'')); }).catch(e=>toast('บันทึกไม่สำเร็จ: '+e.message));
+}
+function addProduction(){const p=document.getElementById('prProduct').value;const q=document.getElementById('prQty').value;const sh=document.getElementById('prShift').value;
+  if(!API){document.getElementById('prMsg').textContent=' สั่งผลิต '+p+' '+q+' หน่วยแล้ว (ทดลอง) — เชื่อม Sheet แล้วจะตัดสต็อกวัตถุดิบอัตโนมัติ';toast('สั่งผลิตแล้ว');return;}
+  fetch(API,{method:'POST',body:JSON.stringify({action:'saveProduction',product:p,qty:q,shift:sh})}).then(()=>{toast('สั่งผลิต + บันทึกลง Sheet แล้ว ✅');loadAll();});
+}
 function useStock(i){toast('เบิกใช้ผลิตแล้ว (ทดลอง)');}
 function changeStatus(kind,i){const seq=['รอคอนเฟิร์ม','รอผลิต','ส่งแล้ว','สำเร็จ'];const cur=DEMO.Orders[i].status;const nx=seq[seq.indexOf(cur)+1];if(nx){DEMO.Orders[i].status=nx;toast('เลื่อนสถานะเป็น '+nx);}else toast('ออเดอร์นี้สำเร็จแล้ว');render();}
 function lockMonth(){if(ROLE!=='owner')return alert('เฉพาะเจ้าของเท่านั้น');const r=DEMO.Accounting.find(x=>x.month==='2026-11');if(r)r.locked=true;toast('ล็อคยอดเดือน 2026-11 แล้ว');render();}
