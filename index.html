@@ -9,7 +9,9 @@ header b{font-size:20px}header b span{color:#f5c451}.pill{background:#f5c451;col
 nav h4{margin:14px 6px 6px;font-size:12px;color:#888;letter-spacing:.08em}nav button{display:flex;gap:10px;width:100%;text-align:left;background:transparent;border:0;padding:10px 10px;border-radius:10px;cursor:pointer;font-size:14px;color:#22123e}nav button.active,nav button:hover{background:#efe7ff;font-weight:700}
 main{flex:1;padding:18px;min-width:0}.topbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
 h1{margin:4px 0 2px;font-size:26px}.muted{color:#666;font-size:13px}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}nav{display:none}}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}nav{display:none}main{padding-bottom:86px}}
+.mobileNav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:998;background:#22123e;padding:8px 6px calc(8px + env(safe-area-inset-bottom));overflow-x:auto;white-space:nowrap;box-shadow:0 -2px 12px rgba(0,0,0,.25)} .mobileNav button{background:#3a2a66;color:#fff;border:0;padding:10px 12px;border-radius:999px;font-size:13px;margin:0 3px;cursor:pointer;white-space:nowrap} .mobileNav button.active{background:#f5c451;color:#22123e;font-weight:700}
+@media(max-width:900px){.mobileNav{display:block}}
 .kpi{background:#fff;border:1px solid #e5ddff;border-radius:16px;padding:14px}.kpi b{font-size:22px}.kpi small{display:block;color:#666}
 .card{background:#fff;border:1px solid #e5ddff;border-radius:16px;padding:16px;margin-bottom:14px}.card h3{margin:0 0 10px}
 table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:9px 8px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}th{background:#22123e;color:#fff;white-space:nowrap}
@@ -30,12 +32,12 @@ input,select,textarea{padding:9px 10px;border:1px solid #ccc;border-radius:9px;w
 .doc-paper h2{margin:0}.doc-paper table{font-size:13px}.doc-paper th{background:#22123e}
 </style></head><body>
 <div id="loginScreen" style="position:fixed;inset:0;background:#22123e;z-index:999;display:none;align-items:center;justify-content:center;padding:16px"><div style="background:#fff;border-radius:20px;padding:28px;width:100%;max-width:420px;text-align:center"><div style="font-size:42px">🥫</div><h2 style="margin:8px 0 2px">OK1 ERP</h2><p style="color:#666;font-size:13px;margin:0 0 16px">ระบบร้านผลิตอาหาร — น้ำพริกเผา • หมูหยอง • ไส้กรอก</p>
-<label style="display:block;text-align:left">ชื่อผู้ใช้</label><input id="loginName" placeholder="เช่น เจ้าของ / แอดมิน / คนผลิต" value="เจ้าของ">
-<div style="height:10px"></div><label style="display:block;text-align:left">บทบาท</label><select id="loginRole"><option value="owner">เจ้าของ</option><option value="admin">แอดมิน</option><option value="staff">พนักงาน / คนผลิต</option><option value="accounting">สำนักงานบัญชี</option></select>
-<div style="height:10px"></div><label style="display:block;text-align:left">รหัสผ่าน (ทดลอง: 1234)</label><input id="loginPass" type="password" placeholder="1234" value="1234">
+<label style="display:block;text-align:left">ชื่อผู้ใช้ (เลือกจากรายชื่อใน Sheet)</label><select id="loginName"><option value="เจ้าของ">เจ้าของ (เจ้าของ)</option><option value="แอดมิน">แอดมิน (แอดมิน)</option><option value="คนผลิต">คนผลิต (พนักงาน / คนผลิต)</option><option value="สำนักงานบัญชี">สำนักงานบัญชี (สำนักงานบัญชี)</option></select>
+<div style="height:10px"></div><label style="display:block;text-align:left">รหัสผ่าน</label><input id="loginPass" type="password" placeholder="ใส่รหัสผ่านของผู้ใช้นั้น" value="">
+<p style="font-size:12px;color:#888;margin:8px 0 0">รหัสเริ่มต้น: เจ้าของ <b>1111</b> • แอดมิน <b>2222</b> • คนผลิต <b>3333</b> • สำนักงานบัญชี <b>4444</b><br>เปลี่ยนรหัสได้ที่เมนู <b>ผู้ใช้ / บทบาท</b> (เฉพาะเจ้าของ) หรือแก้ในชีต Users</p>
 <div style="height:14px"></div><button class="btn gold" style="width:100%" onclick="doLogin()">🔓 เข้าสู่ระบบ</button>
-<p style="font-size:12px;color:#888;margin-top:12px">รหัสทดลองทุกบทบาทคือ <b>1234</b> — เปลี่ยนรหัสได้ในไฟล์ โดยแก้ตัวเลขในฟังก์ชัน doLogin()</p>
-<p id="loginErr" style="color:#c00;font-size:13px;display:none">รหัสผ่านไม่ถูกต้อง ลอง 1234</p></div></div>
+<p id="loginErr" style="color:#c00;font-size:13px;display:none">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</p>
+</div></div>
 <header><div><b>OK1 <span>ERP</span></b> &nbsp;ระบบร้านผลิตอาหาร — น้ำพริกเผา • หมูหยอง • ไส้กรอก</div>
 <div class="flex"><span id="conn" class="pill">● โหมดทดลอง (Demo)</span><select id="roleSel" style="width:auto" onchange="setRole(this.value)"><option value="owner">บทบาท: เจ้าของ</option><option value="admin">แอดมิน</option><option value="staff">พนักงาน / คนผลิต</option><option value="accounting">สำนักงานบัญชี</option></select><button class="btn gold small" onclick="doLogout()">🚪 ออกจากระบบ</button></div></header>
 <div style="max-width:1440px;margin:12px auto 0;padding:0 18px"><div class="card no-print" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between"><div><b>🌿 Paperless — เอกสารไร้กระดาษ</b> <span class="muted">กดที่เอกสารใดก็ได้ → ดูตัวอย่าง → พิมพ์ / PDF / PNG / ส่งอีเมล / ส่งลิงก์</span></div><div class="flex"><button class="btn gold small" onclick="openDoc('invoice')">🧾 ใบแจ้งหนี้ / ใบเสร็จ</button><button class="btn small" onclick="openDoc('delivery')">🚚 ใบส่งของ</button><button class="btn small" onclick="openDoc('production')">🏭 ใบสั่งผลิต</button><button class="btn small" onclick="openDoc('requisition')">📦 ใบเบิกวัตถุดิบ</button><button class="btn small" onclick="openDoc('monthly')">🧮 สรุปยอดเดือน</button></div></div></div>
@@ -85,10 +87,10 @@ const DEMO = {
   {month:'2026-10',income:112000,expense:69000,locked:true,note:'ส่งแล้ว / ล็อคแล้ว'},
  ],
  Users:[
-  {name:'เจ้าของ',role:'owner',note:'ดูได้ทุกอย่าง / ล็อคยอดเดือนได้'},
-  {name:'แอดมิน',role:'admin',note:'จัดการออเดอร์ สต็อก ผลิต'},
-  {name:'คนผลิต',role:'staff',note:'ดูผลิต + เบิกวัตถุดิบ'},
-  {name:'สำนักงานบัญชี',role:'accounting',note:'ดูบัญชีอย่างเดียว'},
+  {name:'เจ้าของ',role:'owner',pass:'1111',note:'ดูได้ทุกอย่าง / ล็อคยอดเดือนได้'},
+  {name:'แอดมิน',role:'admin',pass:'2222',note:'จัดการออเดอร์ สต็อก ผลิต'},
+  {name:'คนผลิต',role:'staff',pass:'3333',note:'ดูผลิต + เบิกวัตถุดิบ'},
+  {name:'สำนักงานบัญชี',role:'accounting',pass:'4444',note:'ดูบัญชีอย่างเดียว'},
  ],
 };
 let ROLE='owner';
@@ -126,7 +128,7 @@ const KEYMAP={
  'วันที่':'date','เลขที่':'no','ลูกค้า':'customer','ยอด':'total','ช่องทาง':'channel',
  'ชื่อซัพพลายเออร์':'name','เครดิต':'credit',
  'คนผลิต':'worker','กะ':'shift','เบิกใช้ผลิต':'material',
- 'เดือน':'month','รายรับ':'income','รายจ่าย':'expense','หมายเหตุ':'note','ล็อคแล้ว':'locked'
+ 'เดือน':'month','ชื่อผู้ใช้':'name','รหัสผ่าน':'pass','บทบาท':'role','สิทธิ์':'note','รายรับ':'income','รายจ่าย':'expense','หมายเหตุ':'note','ล็อคแล้ว':'locked'
 };
 function normalizeRow(r){ const o={}; Object.keys(r||{}).forEach(k=>{ const nk=KEYMAP[k]||k; o[nk]=r[k]; }); 
   // แปลงวันที่ที่เป็น Date object / ISO ให้เป็น YYYY-MM-DD
@@ -155,9 +157,32 @@ const NAV=[
  {k:'users',t:'ผู้ใช้ / บทบาท',i:'👤',g:'ตั้งค่า'},
  {k:'settings',t:'ตั้งค่าเชื่อม Sheet',i:'⚙️',g:'ตั้งค่า'},
 ];
-function renderNav(){let g='';document.getElementById('nav').innerHTML=NAV.map(n=>{let h='';if(n.g!==g){g=n.g;h=`<h4>${g.toUpperCase()}</h4>`;}return h+`<button class="${CURRENT===n.k?'active':''}" onclick="go('${n.k}')">${n.i} ${n.t}</button>`;}).join('');}
-function go(k){CURRENT=k;render();}
-function render(){renderNav();const el=document.getElementById('page');if(CURRENT==='dashboard')el.innerHTML=pageDashboard();else if(CURRENT==='orders')el.innerHTML=pageOrders();else if(CURRENT==='products')el.innerHTML=pageProducts();else if(CURRENT==='stock')el.innerHTML=pageStock();else if(CURRENT==='customers')el.innerHTML=pageCustomers();else if(CURRENT==='suppliers')el.innerHTML=pageSuppliers();else if(CURRENT==='production')el.innerHTML=pageProduction();else if(CURRENT==='accounting')el.innerHTML=pageAccounting();else if(CURRENT==='users')el.innerHTML=pageUsers();else if(CURRENT==='settings')el.innerHTML=pageSettings();window.scrollTo(0,0);}
+
+// ===== สิทธิ์ตามบทบาท =====
+var PERMS = {
+  owner: ['dashboard','orders','customers','products','stock','production','suppliers','accounting','users','settings'],
+  admin: ['dashboard','orders','customers','products','stock','production','suppliers','accounting','settings'],
+  staff: ['dashboard','orders','production','stock','products'],
+  accounting: ['dashboard','orders','customers','accounting']
+};
+function allowedPages(){ return PERMS[ROLE] || PERMS['owner']; }
+function userList(){
+  var live = [];
+  try{ live = dataFor('Users'); }catch(e){}
+  if(live && live.length) return live;
+  return DEMO.Users;
+}
+function refreshLoginUsers(){
+  var sel=document.getElementById('loginName'); if(!sel) return;
+  var users=userList();
+  var cur=sel.value;
+  sel.innerHTML=users.map(function(u){ return '<option value="'+(u.name||'')+'">'+(u.name||'')+' ('+(u.role||'')+')</option>'; }).join('');
+  if(cur) sel.value=cur;
+}
+function renderNav(){let g='';var allow=allowedPages();document.getElementById('nav').innerHTML=NAV.filter(function(n){return allow.indexOf(n.k)>=0;}).map(function(n){let h='';if(n.g!==g){g=n.g;h=`<h4>${g.toUpperCase()}</h4>`;}return h+`<button class="${CURRENT===n.k?'active':''}" onclick="go('${n.k}')">${n.i} ${n.t}</button>`;}).join('');renderMobileNav();}
+function renderMobileNav(){var el=document.getElementById('mobileNav');if(!el)return;var allow=allowedPages();el.innerHTML=NAV.filter(function(n){return allow.indexOf(n.k)>=0;}).map(function(n){return `<button class="${CURRENT===n.k?'active':''}" onclick="go('${n.k}')">${n.i} ${n.t}</button>`;}).join('');}
+function go(k){if(allowedPages().indexOf(k)<0){toast('บทบาทนี้ไม่มีสิทธิ์เข้าเมนูนี้');return;}CURRENT=k;render();}
+function render(){refreshLoginUsers();renderNav();const el=document.getElementById('page');if(CURRENT==='dashboard')el.innerHTML=pageDashboard();else if(CURRENT==='orders')el.innerHTML=pageOrders();else if(CURRENT==='products')el.innerHTML=pageProducts();else if(CURRENT==='stock')el.innerHTML=pageStock();else if(CURRENT==='customers')el.innerHTML=pageCustomers();else if(CURRENT==='suppliers')el.innerHTML=pageSuppliers();else if(CURRENT==='production')el.innerHTML=pageProduction();else if(CURRENT==='accounting')el.innerHTML=pageAccounting();else if(CURRENT==='users')el.innerHTML=pageUsers();else if(CURRENT==='settings')el.innerHTML=pageSettings();window.scrollTo(0,0);}
 
 function pageDashboard(){
  const d=DEMO.Dashboard;const orders=dataFor('Orders');const stock=dataFor('Stock');
@@ -208,14 +233,31 @@ function pageAccounting(){
  <div class="card"><h3>📤 ส่งออกให้สำนักงานบัญชี</h3><button class="btn gold" onclick="exportCSV()">⬇️ ดาวน์โหลด CSV เดือนนี้</button> <span id="exMsg"></span></div>`;
 }
 function pageUsers(){
- return `<h1>👤 ผู้ใช้ / บทบาท</h1><div class="card">${table(['ชื่อ','บทบาท','สิทธิ์'],DEMO.Users.map(u=>[u.name,u.role,u.note]))}</div><div class="card"><h3>ลองสลับบทบาท</h3><p class="muted">เลือกบทบาทที่มุมขวาบนของเว็บ แล้วลองเข้าเมนู บัญชี / ล็อคยอดเดือน ดู — ถ้าไม่ใช่เจ้าของ ปุ่มล็อคจะกดไม่ได้</p></div>`;
+  var users=userList();
+  var rows=users.map(function(u){ return [u.name||'', u.role||'', u.pass||'', u.note||'']; });
+  var form='';
+  if(ROLE==='owner'){
+    form=`<div class="card"><h3>➕ เพิ่มผู้ใช้ใหม่ (เฉพาะเจ้าของ)</h3><div class="row r3"><div><label>ชื่อผู้ใช้</label><input id="uName" placeholder="เช่น สมชาย"></div><div><label>รหัสผ่าน</label><input id="uPass" placeholder="เช่น 5555"></div><div><label>บทบาท</label><select id="uRole"><option value="owner">เจ้าของ</option><option value="admin">แอดมิน</option><option value="staff">พนักงาน / คนผลิต</option><option value="accounting">สำนักงานบัญชี</option></select></div></div><div style="height:10px"></div><label>สิทธิ์ / หมายเหตุ</label><input id="uNote" placeholder="เช่น ดูผลิตอย่างเดียว"><br><br><button class="btn gold" onclick="addUser()">บันทึกผู้ใช้</button><p class="muted" style="margin-top:8px">⚠️ รหัสผ่านเก็บในชีต Users แบบตัวอักษรธรรมดา อย่าใช้รหัสเดียวกับบัญชีธนาคาร / อีเมลสำคัญ<br>สิทธิ์: เจ้าของ = ทุกเมนู • แอดมิน = ทุกเมนูยกเว้นผู้ใช้ • คนผลิต = แดชบอร์ด/ออเดอร์/ผลิต/สต็อก/สินค้า • สำนักงานบัญชี = แดชบอร์ด/ออเดอร์/ลูกค้า/บัญชี</p></div>`;
+  } else {
+    form=`<div class="card"><p class="muted">เพิ่ม / แก้ไขผู้ใช้ได้เฉพาะเจ้าของเท่านั้น ถ้าต้องการเพิ่มคน ให้แจ้งเจ้าของ</p></div>`;
+  }
+  return `<h1>👤 ผู้ใช้ / บทบาท</h1><p class="muted">รายชื่อผู้ใช้ดึงจากชีต <b>Users</b> ใน Google Sheet — แก้ชื่อ / รหัส / บทบาทในชีตได้เลย แล้ว Login ใหม่</p><div class="card">${table(['ชื่อผู้ใช้','บทบาท','รหัสผ่าน','สิทธิ์ / หมายเหตุ'],rows)}</div>`+form;
+}
+function addUser(){
+  var name=(document.getElementById('uName')||{}).value||'';
+  var pass=(document.getElementById('uPass')||{}).value||'';
+  var role=(document.getElementById('uRole')||{}).value||'staff';
+  var note=(document.getElementById('uNote')||{}).value||'';
+  if(!name||!pass) return alert('ใส่ชื่อผู้ใช้กับรหัสผ่านก่อน');
+  if(!API){ DEMO.Users.push({name:name,role:role,pass:pass,note:note}); toast('เพิ่มผู้ใช้แล้ว (โหมดทดลอง)'); render(); return; }
+  fetch(API,{method:'POST',body:JSON.stringify({action:'saveRow',sheet:'Users',values:[name,pass,role,note]})}).then(function(r){return r.json();}).then(function(j){ if(j.ok){ toast('เพิ่มผู้ใช้แล้ว ✅'); loadAll(); } else toast('เพิ่มไม่สำเร็จ: '+(j.error||'')); });
 }
 function pageSettings(){
  return `<h1>⚙️ ตั้งค่าเชื่อม Google Sheet</h1>
  <div class="config"><b>ขั้นตอนเชื่อมจริง (ทำครั้งเดียว):</b><ol><li>เปิด Google Sheet 1 ไฟล์ → Extensions → Apps Script</li><li>วางโค้ดจากไฟล์ <b>OK1-ERP-Code.gs</b> → รัน <b>setupSheets()</b> ครั้งเดียว</li><li>Deploy → New deployment → Web app → Execute as: Me / Who has access: Anyone → Deploy</li><li>คัดลอกลิงก์ .../exec มาวางด้านล่าง → กดบันทึก</li></ol>
  <label>URL Web App (Apps Script)</label><input id="apiUrl" value="${API}" placeholder="https://script.google.com/macros/s/XXXX/exec">
  <br><br><button class="btn gold" onclick="saveApi()">บันทึก + โหลดข้อมูลจริง</button> <button class="btn ghost" onclick="localStorage.removeItem('ok1_api');API='';LIVE=null;document.getElementById('conn').textContent='● โหมดทดลอง (Demo)';render();toast('กลับสู่โหมดทดลองแล้ว')">กลับไปโหมดทดลอง</button></div>
- <div class="card"><h3>โครง Sheet ที่ต้องมี (8 ชีต)</h3><p class="muted">Dashboard | Orders | Products | Stock | Customers | Suppliers | Production | Accounting — แถวแรกคือชื่อคอลัมน์ ฟังก์ชัน setupSheets() จะสร้างให้เอง</p></div>`;
+ <div class="card"><h3>โครง Sheet ที่ต้องมี (9 ชีต)</h3><p class="muted">Dashboard | Orders | Products | Stock | Customers | Suppliers | Production | Accounting | Users — แถวแรกคือชื่อคอลัมน์ ฟังก์ชัน setupSheets() จะสร้างให้เอง</p></div>`;
 }
 // actions (demo + live)
 function addOrder(){
@@ -302,12 +344,22 @@ function checkLogin(){
 }
 function doLogin(){
   var name=(document.getElementById('loginName')||{}).value||'';
-  var role=(document.getElementById('loginRole')||{}).value||'owner';
   var pass=(document.getElementById('loginPass')||{}).value||'';
-  if(!name) return alert('ใส่ชื่อผู้ใช้ก่อน');
-  if(pass!=='1234'){ var e=document.getElementById('loginErr'); if(e) e.style.display='block'; return; }
+  if(!name) return alert('เลือกชื่อผู้ใช้ก่อน');
+  var users=userList();
+  var found=null;
+  for(var i=0;i<users.length;i++){ if(String(users[i].name)===String(name)) found=users[i]; }
+  var role = found ? (found.role||'owner') : 'owner';
+  var correct = found ? String(found.pass||'') : '';
+  // รหัส 1234 ใช้ได้เฉพาะตอนยังไม่มีผู้ใช้ใน Sheet (กันล็อค) — ถ้ามีผู้ใช้แล้วต้องใช้รหัสของผู้ใช้นั้น
+  var ok = false;
+  if(correct && pass===correct) ok=true;
+  else if(!correct && pass==='1234') ok=true;
+  else if(pass==='1234' && !LIVE) ok=true;
+  if(!ok){ var e=document.getElementById('loginErr'); if(e) e.style.display='block'; return; }
   localStorage.setItem('ok1_user', JSON.stringify({name:name, role:role}));
-  ROLE=role; var rs=document.getElementById('roleSel'); if(rs) rs.value=role;
+  ROLE=role; CURRENT='dashboard';
+  var rs=document.getElementById('roleSel'); if(rs) rs.value=role;
   var ls=document.getElementById('loginScreen'); if(ls) ls.style.display='none';
   toast('ยินดีต้อนรับ '+name+' (บทบาท: '+role+')');
   render();
@@ -318,7 +370,7 @@ function doLogout(){
   var ls=document.getElementById('loginScreen'); if(ls) ls.style.display='flex';
   toast('ออกจากระบบแล้ว');
 }
-checkLogin();
+refreshLoginUsers(); checkLogin();
 
 // ===== แก้ไขลูกค้าเดิม =====
 var EDITING_CUSTOMER = '';
