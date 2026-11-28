@@ -13,6 +13,7 @@ h1{margin:4px 0 2px;font-size:26px}.muted{color:#666;font-size:13px}
 .hamburger{display:none;background:#f5c451;color:#22123e;border:0;padding:8px 12px;border-radius:999px;font-weight:700;cursor:pointer;font-size:16px}
 @media(max-width:900px){.hamburger{display:inline-block}nav.open{display:block!important;position:fixed;left:0;top:0;bottom:0;width:240px;max-width:68vw;z-index:999;background:#fff;box-shadow:4px 0 20px rgba(0,0,0,.3);padding:14px;overflow:auto;height:100vh}}
 .navBackdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:998}
+.logoutNav{display:block!important;width:100%;text-align:center!important;background:#fde8e8!important;color:#a00!important;font-weight:800!important;border:1px solid #f5a3a3!important;border-radius:10px!important;margin-bottom:8px!important}
 .closeNav{display:none!important;width:100%;text-align:right!important;background:#f5c451!important;color:#22123e!important;font-weight:800!important;border-radius:10px!important;margin-bottom:8px!important}
 @media(max-width:900px){.closeNav{display:block!important}}
 .mobileNav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:997;background:#22123e;padding:8px 6px calc(8px + env(safe-area-inset-bottom));overflow-x:auto;white-space:nowrap;box-shadow:0 -2px 12px rgba(0,0,0,.25)} .mobileNav button{background:#3a2a66;color:#fff;border:0;padding:10px 12px;border-radius:999px;font-size:13px;margin:0 3px;cursor:pointer;white-space:nowrap} .mobileNav button.active{background:#f5c451;color:#22123e;font-weight:700}
@@ -44,7 +45,7 @@ input,select,textarea{padding:9px 10px;border:1px solid #ccc;border-radius:9px;w
 <main>
 <div id="page"></div>
 </main></div>
-<nav class="mobileNav" id="mobileNav"><button onclick="go('dashboard')">📊 แดชบอร์ด</button><button onclick="go('orders')">🧾 ออเดอร์</button><button onclick="go('customers')">👥 ลูกค้า</button><button onclick="go('products')">🥫 สินค้า</button><button onclick="go('stock')">📦 สต็อก</button><button onclick="go('production')">🏭 ผลิต</button><button onclick="go('suppliers')">🚚 ซัพพลายเออร์</button><button onclick="go('accounting')">🧮 บัญชี</button><button onclick="go('users')">👤 ผู้ใช้</button><button onclick="go('settings')">⚙️ ตั้งค่า</button></nav><div class="toast" id="toast"></div>
+<nav class="mobileNav" id="mobileNav"><button onclick="go('dashboard')">📊 แดชบอร์ด</button><button onclick="go('orders')">🧾 ออเดอร์</button><button onclick="go('customers')">👥 ลูกค้า</button><button onclick="go('products')">🥫 สินค้า</button><button onclick="go('stock')">📦 สต็อก</button><button onclick="go('production')">🏭 ผลิต</button><button onclick="go('suppliers')">🚚 ซัพพลายเออร์</button><button onclick="go('accounting')">🧮 บัญชี</button><button onclick="go('users')">👤 ผู้ใช้</button><button onclick="go('settings')">⚙️ ตั้งค่า</button><button style="background:#a00!important" onclick="doLogout()">🚪 ออก</button></nav><div class="toast" id="toast"></div>
 <script>
 // ============ DEMO DATA — ตรงกับไฟล์เดิม ============
 const DEMO = {
@@ -144,8 +145,8 @@ function toggleMobileMenu(forceClose){
   if(bd) bd.style.display = willOpen ? 'block' : 'none';
   document.body.style.overflow = willOpen ? 'hidden' : '';
 }
-function renderNav(){let g='';var allow=allowedPages();document.getElementById('nav').innerHTML=`<button class="closeNav" onclick="toggleMobileMenu(true)">✕ ปิดเมนู</button>`+NAV.filter(function(n){return allow.indexOf(n.k)>=0;}).map(function(n){let h='';if(n.g!==g){g=n.g;h=`<h4>${g.toUpperCase()}</h4>`;}return h+`<button class="${CURRENT===n.k?'active':''}" onclick="go('${n.k}')">${n.i} ${n.t}</button>`;}).join('');renderMobileNav();}
-function renderMobileNav(){var el=document.getElementById('mobileNav');if(!el)return;var allow=allowedPages();el.innerHTML=NAV.filter(function(n){return allow.indexOf(n.k)>=0;}).map(function(n){return `<button class="${CURRENT===n.k?'active':''}" onclick="go('${n.k}')">${n.i} ${n.t}</button>`;}).join('');}
+function renderNav(){let g='';var allow=allowedPages();document.getElementById('nav').innerHTML=`<button class="closeNav" onclick="toggleMobileMenu(true)">✕ ปิดเมนู</button><button class="logoutNav" onclick="doLogout()">🚪 ออกจากระบบ</button>`+NAV.filter(function(n){return allow.indexOf(n.k)>=0;}).map(function(n){let h='';if(n.g!==g){g=n.g;h=`<h4>${g.toUpperCase()}</h4>`;}return h+`<button class="${CURRENT===n.k?'active':''}" onclick="go('${n.k}')">${n.i} ${n.t}</button>`;}).join('');renderMobileNav();}
+function renderMobileNav(){var el=document.getElementById('mobileNav');if(!el)return;var allow=allowedPages();el.innerHTML=NAV.filter(function(n){return allow.indexOf(n.k)>=0;}).map(function(n){return `<button class="${CURRENT===n.k?'active':''}" onclick="go('${n.k}')">${n.i} ${n.t}</button>`;}).join('')+`<button style="background:#a00!important" onclick="doLogout()">🚪 ออก</button>`;}
 function go(k){if(allowedPages().indexOf(k)<0){toast('บทบาทนี้ไม่มีสิทธิ์เข้าเมนูนี้');return;}CURRENT=k;var nv=document.getElementById('nav');if(nv)nv.classList.remove('open');var bd=document.getElementById('navBackdrop');if(bd)bd.style.display='none';document.body.style.overflow='';render();}
 function render(){refreshLoginUsers();renderNav();const el=document.getElementById('page');if(CURRENT==='dashboard')el.innerHTML=pageDashboard();else if(CURRENT==='orders')el.innerHTML=pageOrders();else if(CURRENT==='products')el.innerHTML=pageProducts();else if(CURRENT==='stock')el.innerHTML=pageStock();else if(CURRENT==='customers')el.innerHTML=pageCustomers();else if(CURRENT==='suppliers')el.innerHTML=pageSuppliers();else if(CURRENT==='production')el.innerHTML=pageProduction();else if(CURRENT==='accounting')el.innerHTML=pageAccounting();else if(CURRENT==='users')el.innerHTML=pageUsers();else if(CURRENT==='settings')el.innerHTML=pageSettings();window.scrollTo(0,0);}
 
@@ -281,7 +282,11 @@ function doLogin(){
 function doLogout(){
   if(!confirm('ออกจากระบบใช่ไหม?')) return;
   localStorage.removeItem('ok1_user');
+  var nv=document.getElementById('nav'); if(nv) nv.classList.remove('open');
+  var bd=document.getElementById('navBackdrop'); if(bd) bd.style.display='none';
+  document.body.style.overflow='';
   var ls=document.getElementById('loginScreen'); if(ls) ls.style.display='flex';
+  var lp=document.getElementById('loginPass'); if(lp) lp.value='';
   toast('ออกจากระบบแล้ว');
 }
 function addRow(kind){
