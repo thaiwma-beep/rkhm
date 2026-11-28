@@ -87,6 +87,7 @@ const DEMO = {
   {name:'สำนักงานบัญชี',role:'accounting',pass:'4444',note:'ดูบัญชีอย่างเดียว'},
  ],
 };
+var DEFAULT_DEMO = JSON.parse(JSON.stringify(DEMO));
 let ROLE='owner';
 let CURRENT='dashboard';
 let FILTER={q:'',status:'ทั้งหมด'};
@@ -180,7 +181,7 @@ function pageSuppliers(){
 function pageProduction(){
  const rows=filterRows(dataFor('Production'),['product','worker','status']);
  return `<h1>🏭 ผลิต</h1><p class="muted">เบิกใช้ผลิต → ตัดสต็อกวัตถุดิบอัตโนมัติ (เมื่อเชื่อม Sheet)</p>${searchBar(['รอผลิต','สำเร็จ'])}
- <div class="card"><h3>➕ สั่งผลิตใหม่ + เบิกวัตถุดิบ</h3><div class="row r3"><div><label>สินค้าที่จะผลิต</label><select id="prProduct">${dataFor('Products').map(pr=>`<option value="${pr.name}">${pr.code} — ${pr.name}</option>`).join('')}</select></div><div><label>จำนวน</label><input id="prQty" type="number" value="50"></div><div><label>กะ</label><select id="prShift"><option>กะเช้า</option><option>กะบ่าย</option></select></div></div><br><button class="btn" onclick="addProduction()">สั่งผลิต + เบิกวัตถุดิบ</button> <span id="prMsg"></span></div>
+ <div class="card"><h3>➕ สั่งผลิตใหม่ + เบิกวัตถุดิบ</h3><div class="row r3"><div><label>สินค้าที่จะผลิต</label><select id="prProduct">${dataFor('Products').map(pr=>`<option value="${pr.name}">${pr.code} — ${pr.name}</option>`).join('')}</select></div><div><label>จำนวน</label><input id="prQty" type="number" value="50"></div><div><label>กะ</label><select id="prShift"><option>กะเช้า</option><option>กะบ่าย</option></select></div></div><div style="height:10px"></div><div><label>เบิกวัตถุดิบที่ใช้ผลิต (เช่น พริกแห้ง 5 กก. / หมู 10 กก.)</label><input id="prMaterial" placeholder="เช่น เบิกใช้ผลิต: พริกแห้ง 5 กก."></div><br><button class="btn" onclick="addProduction()">สั่งผลิต + เบิกวัตถุดิบ</button> <span id="prMsg"></span></div>
  <div class="card"><h3>คิวผลิต (${rows.length})</h3>${table(['วันที่','สินค้า','จำนวน','คนผลิต','กะ','เบิกใช้ผลิต','สถานะ'],rows.map(p=>[p.date,p.product,p.qty+' '+(p.unit||''),p.worker||'',p.shift||'',p.material||'',badge(p.status)]))}</div>`;
 }
 function pageAccounting(){
@@ -217,6 +218,7 @@ function pageSettings(){
  <div class="config"><b>ขั้นตอนเชื่อมจริง (ทำครั้งเดียว):</b><ol><li>เปิด Google Sheet 1 ไฟล์ → Extensions → Apps Script</li><li>วางโค้ดจากไฟล์ <b>OK1-ERP-Code.gs</b> → รัน <b>setupSheets()</b> ครั้งเดียว</li><li>Deploy → New deployment → Web app → Execute as: Me / Who has access: Anyone → Deploy</li><li>คัดลอกลิงก์ .../exec มาวางด้านล่าง → กดบันทึก</li></ol>
  <label>URL Web App (Apps Script)</label><input id="apiUrl" value="${API}" placeholder="https://script.google.com/macros/s/XXXX/exec">
  <br><br><button class="btn gold" onclick="saveApi()">บันทึก + โหลดข้อมูลจริง</button> <button class="btn ghost" onclick="localStorage.removeItem('ok1_api');API='';LIVE=null;document.getElementById('conn').textContent='● โหมดทดลอง (Demo)';render();toast('กลับสู่โหมดทดลองแล้ว')">กลับไปโหมดทดลอง</button></div>
+ <div class="card" style="border:2px solid #f5a3a3"><h3>🔄 เซ็ตฐานข้อมูลใหม่ทั้งหมด (ล้างข้อมูลทดลอง)</h3><p class="muted">ใช้ตอนทดลองเสร็จแล้วอยากเริ่มใหม่เหมือนตั้งฐานข้อมูลใหม่ — <b>ลบข้อมูลทุกชีต</b> (ออเดอร์ / ลูกค้า / สต็อก / ผลิต / บัญชี / ซัพพลายเออร์) แล้วใส่ข้อมูลตั้งต้นกลับมาใหม่</p><ul style="font-size:13px;line-height:1.8"><li>สินค้า 4 รายการ: P-001 / P-002 / P-003 / P-801</li><li>ผู้ใช้ตั้งต้น 4 คนเสมอ: เจ้าของ <b>1111</b> • แอดมิน <b>2222</b> • คนผลิต <b>3333</b> • สำนักงานบัญชี <b>4444</b></li><li>ข้อมูลตัวอย่างลูกค้า / ออเดอร์ / สต็อก / ผลิต กลับมาเป็นค่าเริ่มต้น</li></ul><p style="color:#a00;font-weight:700;font-size:13px">⚠️ ล้างแล้วกู้คืนไม่ได้ — ใช้เฉพาะตอนต้องการเริ่มใหม่จริงๆ เท่านั้น</p><button class="btn" style="background:#a00" onclick="resetDatabase()">🔄 เซ็ตฐานข้อมูลใหม่ทั้งหมด</button> <span id="resetMsg"></span><p class="muted" style="margin-top:8px">ถ้ากดแล้วขึ้นว่าเซิร์ฟเวอร์ยังไม่รองรับ แปลว่าไฟล์ <b>Code.gs</b> ใน Apps Script ยังเป็นเวอร์ชันเก่า — ให้แทนที่ด้วยไฟล์ <b>OK1-ERP-Code.gs</b> เวอร์ชันใหม่ที่แนบมาในรอบนี้ แล้ว Deploy ใหม่ 1 ครั้ง</p></div>
  <div class="card"><h3>โครง Sheet ที่ต้องมี (9 ชีต)</h3><p class="muted">Dashboard | Orders | Products | Stock | Customers | Suppliers | Production | Accounting | Users — แถวแรกคือชื่อคอลัมน์ ฟังก์ชัน setupSheets() จะสร้างให้เอง</p></div>`;
 }
 // actions (demo + live)
@@ -310,7 +312,69 @@ function addRow(kind){
   fetch(API,{method:'POST',body:JSON.stringify({action:'saveRow',sheet:sheet,values:values})}).then(function(r){return r.json();}).then(function(j){ if(j.ok){toast('บันทึกลง Sheet แล้ว ✅');loadAll();} else toast('บันทึกไม่สำเร็จ: '+(j.error||'')); }).catch(function(e){toast('บันทึกไม่สำเร็จ: '+e.message);});
 }
 
-function addProduction(){const p=document.getElementById('prProduct').value;const q=document.getElementById('prQty').value;document.getElementById('prMsg').textContent=' สั่งผลิต '+p+' '+q+' หน่วยแล้ว (ทดลอง) — เชื่อม Sheet แล้วจะตัดสต็อกวัตถุดิบอัตโนมัติ';toast('สั่งผลิตแล้ว');}
+function addProduction(){
+  var prod=(document.getElementById('prProduct')||{}).value||'';
+  var qty=Number((document.getElementById('prQty')||{}).value||0);
+  var shift=(document.getElementById('prShift')||{}).value||'กะเช้า';
+  var material=(document.getElementById('prMaterial')||{}).value||'';
+  if(!prod) return alert('เลือกสินค้าที่จะผลิตก่อน');
+  if(!qty||qty<=0) return alert('ใส่จำนวนที่มากกว่า 0');
+  var pr=dataFor('Products').find(function(x){return x.name===prod;})||{};
+  var unit=pr.unit||'กระปุก';
+  var worker='คนผลิต';
+  try{ var u=JSON.parse(localStorage.getItem('ok1_user')||'{}'); if(u.name) worker=u.name; }catch(e){}
+  var today=new Date(); var date=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  var values=[date,prod,qty,unit,worker,shift,material,'รอผลิต'];
+  var msg=document.getElementById('prMsg');
+  if(!API){
+    DEMO.Production.push({date:date,product:prod,qty:qty,unit:unit,worker:worker,shift:shift,material:material,status:'รอผลิต'});
+    if(msg) msg.textContent=' สั่งผลิต '+prod+' '+qty+' '+unit+' แล้ว (โหมดทดลอง)';
+    toast('สั่งผลิตแล้ว ✅'); render(); return;
+  }
+  if(msg) msg.textContent=' กำลังบันทึก...';
+  fetch(API,{method:'POST',body:JSON.stringify({action:'saveRow',sheet:'Production',values:values})}).then(function(r){return r.json();}).then(function(j){
+    if(j.ok){ if(msg) msg.textContent=' บันทึกสั่งผลิต '+prod+' '+qty+' '+unit+' ลงชีต Production แล้ว ✅'; toast('บันทึกสั่งผลิตแล้ว ✅'); loadAll(); }
+    else { if(msg) msg.textContent=''; toast('บันทึกไม่สำเร็จ: '+(j.error||'เซิร์ฟเวอร์ไม่ตอบ')); }
+  }).catch(function(e){ if(msg) msg.textContent=''; toast('บันทึกไม่สำเร็จ: '+e.message); });
+}
+function resetDatabase(){
+  if(ROLE!=='owner') return alert('เฉพาะเจ้าของเท่านั้นที่เซ็ตฐานข้อมูลใหม่ได้');
+  if(!confirm('เซ็ตฐานข้อมูลใหม่ทั้งหมดใช่ไหม?\n\nข้อมูลทุกชีตจะถูกลบ แล้วใส่ข้อมูลตั้งต้นกลับมาใหม่\n(สินค้า 4 รายการ + ผู้ใช้ 4 คน + ข้อมูลตัวอย่าง)\n\n⚠️ ล้างแล้วกู้คืนไม่ได้')) return;
+  var typed=prompt('ยืนยันครั้งสุดท้าย — พิมพ์คำว่า RESET แล้วกด OK');
+  if(typed!=='RESET'){ toast('ยกเลิกแล้ว ข้อมูลเดิมยังอยู่ครบ'); return; }
+  var msg=document.getElementById('resetMsg');
+  if(!API){
+    // โหมดทดลอง: คืนค่า DEMO จากสแนปช็อตตั้งต้น
+    var fresh=JSON.parse(JSON.stringify(DEFAULT_DEMO));
+    Object.keys(fresh).forEach(function(k){ DEMO[k]=fresh[k]; });
+    localStorage.removeItem('ok1_user');
+    if(msg) msg.textContent=' ล้างฐานข้อมูลทดลองแล้ว ✅ กำลังกลับไปหน้า Login';
+    toast('เซ็ตฐานข้อมูลใหม่แล้ว ✅');
+    setTimeout(function(){ doLogoutSilent(); }, 800);
+    return;
+  }
+  if(msg) msg.textContent=' กำลังล้างฐานข้อมูล...';
+  fetch(API,{method:'POST',body:JSON.stringify({action:'resetDatabase'})}).then(function(r){return r.json();}).then(function(j){
+    if(j.ok){
+      if(msg) msg.textContent=' เซ็ตฐานข้อมูลใหม่แล้ว ✅ กำลังกลับไปหน้า Login (ใช้ผู้ใช้ตั้งต้น 1111 / 2222 / 3333 / 4444)';
+      toast('เซ็ตฐานข้อมูลใหม่แล้ว ✅');
+      setTimeout(function(){ doLogoutSilent(); loadAll(); }, 1200);
+    } else {
+      if(msg) msg.textContent='';
+      alert('เซิร์ฟเวอร์ยังไม่รองรับปุ่มนี้ (Code.gs เวอร์ชันเก่า)\n\nให้แทนที่ไฟล์ Code.gs ใน Apps Script ด้วยไฟล์ OK1-ERP-Code.gs เวอร์ชันใหม่ที่แนบมา แล้ว Deploy ใหม่ 1 ครั้ง จากนั้นกดปุ่มนี้อีกครั้ง');
+    }
+  }).catch(function(e){ if(msg) msg.textContent=''; toast('ล้างไม่สำเร็จ: '+e.message); });
+}
+function doLogoutSilent(){
+  localStorage.removeItem('ok1_user');
+  var nv=document.getElementById('nav'); if(nv) nv.classList.remove('open');
+  var bd=document.getElementById('navBackdrop'); if(bd) bd.style.display='none';
+  document.body.style.overflow='';
+  var ls=document.getElementById('loginScreen'); if(ls) ls.style.display='flex';
+  var lp=document.getElementById('loginPass'); if(lp) lp.value='';
+  var ln=document.getElementById('loginName'); if(ln) ln.value='เจ้าของ';
+  refreshLoginUsers();
+}
 function useStock(i){toast('เบิกใช้ผลิตแล้ว (ทดลอง)');}
 function changeStatus(kind,i){const seq=['รอคอนเฟิร์ม','รอผลิต','ส่งแล้ว','สำเร็จ'];const cur=DEMO.Orders[i].status;const nx=seq[seq.indexOf(cur)+1];if(nx){DEMO.Orders[i].status=nx;toast('เลื่อนสถานะเป็น '+nx);}else toast('ออเดอร์นี้สำเร็จแล้ว');render();}
 function lockMonth(){if(ROLE!=='owner')return alert('เฉพาะเจ้าของเท่านั้น');const r=DEMO.Accounting.find(x=>x.month==='2026-11');if(r)r.locked=true;toast('ล็อคยอดเดือน 2026-11 แล้ว');render();}
