@@ -86,6 +86,13 @@ const DEMO = {
   {name:'คนผลิต',role:'staff',pass:'3333',note:'ดูผลิต + เบิกวัตถุดิบ'},
   {name:'สำนักงานบัญชี',role:'accounting',pass:'4444',note:'ดูบัญชีอย่างเดียว'},
  ],
+BOM:[
+  {productCode:'P-001',product:'น้ำพริกเผาโฮมเมด',raw:'พริกแห้ง จินดา',perUnit:0.1,unit:'กก.'},
+  {productCode:'P-001',product:'น้ำพริกเผาโฮมเมด',raw:'กระปุก',perUnit:1,unit:'ใบ'},
+  {productCode:'P-002',product:'หมูหยองพรีเมียม',raw:'เนื้อหมูสันนอก',perUnit:0.5,unit:'กก.'},
+  {productCode:'P-003',product:'เครื่องปรุงไส้กรอก',raw:'หมูบด',perUnit:0.5,unit:'กก.'},
+  {productCode:'P-801',product:'สินค้าพิเศษ P-801',raw:'กระปุก',perUnit:1,unit:'ใบ'}
+]
 };
 var DEFAULT_DEMO = JSON.parse(JSON.stringify(DEMO));
 let ROLE='owner';
@@ -101,9 +108,20 @@ async function loadAll(){
   if(!API) return;
   try{const r=await fetch(API+'?action=getAll');const j=await r.json();if(j.ok&&j.data){LIVE=normalizeData(j.data);document.getElementById('conn').textContent='● เชื่อม Google Sheet แล้ว';render();}}catch(e){toast('เชื่อม Sheet ไม่สำเร็จ: '+e.message);}
 }
-const KEYMAP={'ชื่อลูกค้า':'name','ชื่อ':'name','ประเภท':'type','เบอร์หลัก':'phone','จังหวัด':'province','ที่อยู่':'addr','สถานะ':'status','รหัส':'code','สินค้า':'name','หน่วย':'unit','ราคา':'price','สต็อก':'stock','วัตถุดิบ':'name','จำนวน':'qty','ขั้นต่ำ':'min','วันหมดอายุ':'exp','วันที่':'date','เลขที่':'no','ลูกค้า':'customer','ยอด':'total','ช่องทาง':'channel','ชื่อซัพพลายเออร์':'name','เครดิต':'credit','คนผลิต':'worker','กะ':'shift','เบิกใช้ผลิต':'material','เดือน':'month','รายรับ':'income','รายจ่าย':'expense','หมายเหตุ':'note','ล็อคแล้ว':'locked','ชื่อผู้ใช้':'name','รหัสผ่าน':'pass','บทบาท':'role','สิทธิ์':'note','ตัวชี้วัด':'name','ค่า':'price'};
-function normalizeRow(r){const o={};Object.keys(r||{}).forEach(k=>{const nk=KEYMAP[k]||k;o[nk]=r[k];});if(o.date&&typeof o.date==='string'&&o.date.includes('T'))o.date=o.date.slice(0,10);return o;}
-function normalizeData(data){const out={};Object.keys(data||{}).forEach(k=>{out[k]=(data[k]||[]).map(normalizeRow);});return out;}
+const SHEETMAP={
+ Orders:{'วันที่':'date','เลขที่':'no','ลูกค้า':'customer','สินค้า':'product','จำนวน':'qty','หน่วย':'unit','ยอด':'total','ช่องทาง':'channel','สถานะ':'status','วันที่จัดส่ง':'deliveryDate','หมายเหตุจัดส่ง':'deliveryNote'},
+ Products:{'รหัส':'code','สินค้า':'name','หน่วย':'unit','ราคา':'price','สต็อก':'stock','สถานะ':'status'},
+ Stock:{'รหัส':'code','วัตถุดิบ':'name','จำนวน':'qty','หน่วย':'unit','ขั้นต่ำ':'min','สถานะ':'status','วันหมดอายุ':'exp'},
+ Customers:{'ชื่อลูกค้า':'name','ชื่อ':'name','ประเภท':'type','เบอร์หลัก':'phone','จังหวัด':'province','ที่อยู่':'addr','สถานะ':'status'},
+ Suppliers:{'ชื่อซัพพลายเออร์':'name','ชื่อ':'name','เบอร์หลัก':'phone','เครดิต':'credit','สถานะ':'status'},
+ Production:{'วันที่':'date','สินค้า':'product','จำนวน':'qty','หน่วย':'unit','คนผลิต':'worker','กะ':'shift','เบิกใช้ผลิต':'material','สถานะ':'status'},
+ Accounting:{'เดือน':'month','รายรับ':'income','รายจ่าย':'expense','สถานะ':'status','หมายเหตุ':'note','ล็อคแล้ว':'locked'},
+ Users:{'ชื่อผู้ใช้':'name','รหัสผ่าน':'pass','บทบาท':'role','สิทธิ์':'note'},
+ BOM:{'รหัสสินค้า':'productCode','สินค้า':'product','วัตถุดิบ':'raw','จำนวนต่อหน่วย':'perUnit','หน่วย':'unit'},
+ Dashboard:{'ตัวชี้วัด':'name','ค่า':'price'}};
+function toDateOnly(v){ if(typeof v==='string'&&/^\d{4}-\d{2}-\d{2}T/.test(v)) return v.slice(0,10); return v; }
+function normalizeRow(r,sheet){const o={};const mp=SHEETMAP[sheet]||{};Object.keys(r||{}).forEach(k=>{const nk=mp[k]||k;o[nk]=toDateOnly(r[k]);});return o;}
+function normalizeData(data){const out={};Object.keys(data||{}).forEach(k=>{out[k]=(data[k]||[]).map(function(r){return normalizeRow(r,k);});});return out;}
 function dataFor(key){ if(LIVE&&LIVE[key]&&LIVE[key].length) return LIVE[key]; return DEMO[key]||[]; }
 function badge(s){
   const m={'รอคอนเฟิร์ม':'warn','รอผลิต':'warn','ส่งแล้ว':'info','สำเร็จ':'ok','สำเร็จ ':'ok','ยกเลิก':'bad','ใช้งาน':'ok','พักการสั่งซื้อ':'bad','วัตถุดิบใกล้หมด':'bad','ปกติ':'ok','ล็อคแล้ว':'bad','ส่งออก':'info'};
@@ -154,10 +172,10 @@ function pageDashboard(){
 }
 function pageOrders(){
  const rows=filterRows(dataFor('Orders'),['customer','product','no','status']);
- const flow=`<div class="card" style="background:#efe7ff"><b>วงจร:</b> ออเดอร์ใหม่ → ตัดสต็อกสินค้าสำเร็จรูปทันที → ถ้าของไม่พอจะไม่ให้บันทึก &nbsp;|&nbsp; แก้ไขออเดอร์ = คืนสต็อกเดิมแล้วตัดใหม่ &nbsp;|&nbsp; ยกเลิก = คืนสต็อก</div>`;
- return `<h1>🧾 ออเดอร์ / ขาย</h1>${flow}<p class="muted">ช่องทาง: เงินสด / เครดิต • สถานะ: รอคอนเฟิร์ม → รอผลิต → ส่งแล้ว → สำเร็จ</p>${searchBar(['รอคอนเฟิร์ม','รอผลิต','ส่งแล้ว','สำเร็จ','ยกเลิก'])}
- <div class="card"><h3 id="ordFormTitle">➕ เพิ่มออเดอร์ใหม่</h3><div class="row r4"><div><label>ลูกค้า (เลือกจากฐานลูกค้า)</label><select id="oCustomer">${dataFor('Customers').map(c=>`<option value="${c.name}">${c.name} (${c.type||''})</option>`).join('')}</select></div><div><label>สินค้า (สต็อกคงเหลือแสดงในวงเล็บ)</label><select id="oProduct">${dataFor('Products').map(pr=>`<option value="${pr.name}">${pr.code} — ${pr.name} (คงเหลือ ${pr.stock||0} ${pr.unit||''})</option>`).join('')}</select></div><div><label>จำนวน</label><input id="oQty" type="number" value="10"></div><div><label>ช่องทาง</label><select id="oChannel"><option>เงินสด</option><option>เครดิต</option></select></div></div><br><button class="btn" id="ordSaveBtn" onclick="addOrder()">บันทึกออเดอร์</button> <button class="btn ghost" id="ordCancelBtn" style="display:none" onclick="cancelEditOrder()">ยกเลิกการแก้ไข</button> <span id="oMsg"></span></div>
- <div class="card"><h3>รายการทั้งหมด (${rows.length})</h3>${table(['วันที่','เลขที่','ลูกค้า','สินค้า','จำนวน','ยอด','ช่องทาง','สถานะ','จัดการ'],rows.map((o,i)=>[o.date,o.no,o.customer,o.product,o.qty+' '+(o.unit||''),money(o.total),o.channel||'',badge(o.status),`<button class="btn small gold" onclick="editOrder(${dataFor('Orders').indexOf(o)})">✏️ แก้ไข</button> <button class="btn small" onclick="changeStatus('Orders',${dataFor('Orders').indexOf(o)})">เลื่อนสถานะ →</button> ${o.status!=='ยกเลิก'&&o.status!=='สำเร็จ'?`<button class="btn small" style="background:#a00" onclick="cancelOrder(${dataFor('Orders').indexOf(o)})">ยกเลิก + คืนสต็อก</button>`:''}`]))}</div>`;
+ const flow=`<div class="card" style="background:#efe7ff"><b>วงจรกลุ่มที่ 1:</b> ออเดอร์ใหม่ → เช็คสต็อกสินค้า → ตัดสต็อกทันที → ผลิตเติมไม่ได้ถ้าของไม่พอ → <b>จัดส่ง</b> (บันทึกวันที่ + หลักฐานจัดส่ง) → สำเร็จ &nbsp;|&nbsp; แก้ไขออเดอร์ = คืนสต็อกเดิมแล้วตัดใหม่ &nbsp;|&nbsp; ยกเลิก = คืนสต็อก</div>`;
+ return `<h1>🧾 ออเดอร์ / ขาย / จัดส่ง</h1>${flow}<p class="muted">สถานะ: รอคอนเฟิร์ม → รอผลิต → พร้อมจัดส่ง → จัดส่งแล้ว → สำเร็จ (กด “เลื่อนสถานะ →” เพื่อเดินไปขั้นถัดไป)</p>${searchBar(['รอคอนเฟิร์ม','รอผลิต','พร้อมจัดส่ง','จัดส่งแล้ว','สำเร็จ','ยกเลิก'])}
+ <div class="card"><h3 id="ordFormTitle">➕ เพิ่มออเดอร์ใหม่</h3><div class="row r4"><div><label>ลูกค้า (เลือกจากฐานลูกค้า)</label><select id="oCustomer">${dataFor('Customers').map(c=>`<option value="${c.name}">${c.name} (${c.type||''})</option>`).join('')}</select></div><div><label>สินค้า (สต็อกคงเหลือแสดงในวงเล็บ)</label><select id="oProduct">${dataFor('Products').map(pr=>`<option value="${pr.name}">${pr.code} — ${pr.name} (คงเหลือ ${pr.stock||0} ${pr.unit||''})</option>`).join('')}</select></div><div><label>จำนวน</label><input id="oQty" type="number" value="10"></div><div><label>ช่องทาง</label><select id="oChannel"><option>เงินสด</option><option>เครดิต</option></select></div></div><div class="row r2" style="margin-top:10px"><div><label>📦 วันที่จัดส่ง (กรอกตอนจะส่ง หรือกรอกไว้ล่วงหน้าก็ได้)</label><input id="oDeliveryDate" type="date" value="${todayStr()}"></div><div><label>📦 หมายเหตุจัดส่ง (เช่น ชื่อคนส่ง / เลขพัสดุ / เก็บเงินปลายทาง)</label><input id="oDeliveryNote" placeholder="เช่น ส่งโดยพี่ดำ / เลขพัสดุ TH1234"></div></div><br><button class="btn" id="ordSaveBtn" onclick="addOrder()">บันทึกออเดอร์</button> <button class="btn ghost" id="ordCancelBtn" style="display:none" onclick="cancelEditOrder()">ยกเลิกการแก้ไข</button> <span id="oMsg"></span></div>
+ <div class="card"><h3>รายการทั้งหมด (${rows.length})</h3>${table(['วันที่','เลขที่','ลูกค้า','สินค้า','จำนวน','ยอด','ช่องทาง','วันที่จัดส่ง','หลักฐานจัดส่ง','สถานะ','จัดการ'],rows.map((o,i)=>[o.date,o.no,o.customer,o.product,o.qty+' '+(o.unit||''),money(o.total),o.channel||'',o.deliveryDate||'—',o.deliveryNote||'—',badge(o.status),`<button class="btn small gold" onclick="editOrder(${dataFor('Orders').indexOf(o)})">✏️ แก้ไข</button> <button class="btn small" onclick="changeStatus('Orders',${dataFor('Orders').indexOf(o)})">เลื่อนสถานะ →</button> ${o.status==='พร้อมจัดส่ง'?`<button class="btn small gold" onclick="recordDelivery(${dataFor('Orders').indexOf(o)})">📦 บันทึกจัดส่ง</button>`:''} ${o.status!=='ยกเลิก'&&o.status!=='สำเร็จ'?`<button class="btn small" style="background:#a00" onclick="cancelOrder(${dataFor('Orders').indexOf(o)})">ยกเลิก + คืนสต็อก</button>`:''}`]))}</div>`;
 }
 function pageProducts(){
  const rows=filterRows(dataFor('Products'),['name','code']);
@@ -182,9 +200,47 @@ function pageSuppliers(){
 }
 function pageProduction(){
  const rows=filterRows(dataFor('Production'),['product','worker','status']);
- return `<h1>🏭 ผลิต</h1><p class="muted"><b>วงจร:</b> สั่งผลิต (ยังไม่ตัดสต็อก) → กด <b>“ผลิตสำเร็จ ✅”</b> → สินค้าสำเร็จรูป +จำนวน และวัตถุดิบที่เบิก −จำนวน &nbsp;|&nbsp; ถ้าใส่จำนวนผิด กด ✏️ แก้ไข ก่อนกดผลิตสำเร็จ</p>${searchBar(['รอผลิต','สำเร็จ'])}
- <div class="card"><h3 id="prFormTitle">➕ สั่งผลิตใหม่ + เบิกวัตถุดิบ</h3><div class="row r3"><div><label>สินค้าที่จะผลิต</label><select id="prProduct">${dataFor('Products').map(pr=>`<option value="${pr.name}">${pr.code} — ${pr.name}</option>`).join('')}</select></div><div><label>จำนวนที่จะผลิต</label><input id="prQty" type="number" value="50"></div><div><label>กะ</label><select id="prShift"><option>กะเช้า</option><option>กะบ่าย</option></select></div></div><div class="row r2" style="margin-top:10px"><div><label>วัตถุดิบที่จะเบิก (เลือกจาก Stock — จะถูกตัดตอนกดผลิตสำเร็จ)</label><select id="prMaterialItem">${dataFor('Stock').map(s=>`<option value="${s.name}">${s.code} — ${s.name} (คงเหลือ ${s.qty} ${s.unit})</option>`).join('')}</select></div><div><label>จำนวนวัตถุดิบที่เบิก</label><input id="prMaterialQty" type="number" value="5"></div></div><div style="margin-top:10px"><label>หมายเหตุเบิกเพิ่ม (ถ้ามี)</label><input id="prMaterial" placeholder="เช่น พริกแห้ง 5 กก."></div><br><button class="btn" id="prSaveBtn" onclick="addProduction()">สั่งผลิต + เบิกวัตถุดิบ</button> <button class="btn ghost" id="prCancelBtn" style="display:none" onclick="cancelEditProduction()">ยกเลิกการแก้ไข</button> <span id="prMsg"></span></div>
- <div class="card"><h3>คิวผลิต (${rows.length})</h3>${table(['วันที่','สินค้า','จำนวน','คนผลิต','กะ','เบิกใช้ผลิต','สถานะ','จัดการ'],rows.map(p=>[p.date,p.product,p.qty+' '+(p.unit||''),p.worker||'',p.shift||'',p.material||'',badge(p.status),`<button class="btn small gold" onclick="editProduction(${dataFor('Production').indexOf(p)})">✏️ แก้ไข</button> ${p.status==='รอผลิต'?`<button class="btn small gold" onclick="completeProduction(${dataFor('Production').indexOf(p)})">✅ ผลิตสำเร็จ</button>`:''}`]))}</div>`;
+ const firstProd=(dataFor('Products')[0]||{}).name||'';
+ return `<h1>🏭 ผลิต + สูตรผลิต (BOM)</h1><p class="muted"><b>วงจรกลุ่มที่ 2 → กลุ่มที่ 1:</b> เลือกสินค้า → ระบบดึงสูตร (BOM) มาแสดงว่าใช้วัตถุดิบอะไรบ้าง → กด <b>“ผลิตสำเร็จ ✅”</b> → ตัดวัตถุดิบทุกตัวตามสูตร และสินค้าสำเร็จรูป +เข้าคลัง → ออเดอร์ในกลุ่มที่ 1 สั่งขายได้ทันที</p>${searchBar(['รอผลิต','สำเร็จ'])}
+ <div class="card"><h3 id="prFormTitle">➕ สั่งผลิตใหม่</h3><div class="row r3"><div><label>สินค้าที่จะผลิต</label><select id="prProduct" onchange="refreshBomPreview()">${dataFor('Products').map(pr=>`<option value="${pr.name}">${pr.code} — ${pr.name}</option>`).join('')}</select></div><div><label>จำนวนที่จะผลิต</label><input id="prQty" type="number" value="50" oninput="refreshBomPreview()"></div><div><label>กะ</label><select id="prShift"><option>กะเช้า</option><option>กะบ่าย</option></select></div></div>
+ <div style="margin-top:12px"><h4 style="margin:0 0 6px">📋 สูตรผลิต (BOM) ของสินค้านี้ — ผลิต <span id="bomQtyLabel">50</span> ชิ้น ต้องใช้วัตถุดิบดังนี้</h4><div id="bomPreview">${bomTableHTML(firstProd,50)}</div></div>
+ <div style="margin-top:10px"><label>หมายเหตุเพิ่มเติม (ถ้ามี)</label><input id="prMaterial" placeholder="เช่น ผลิตล็อตพิเศษ"></div><br><button class="btn" id="prSaveBtn" onclick="addProduction()">สั่งผลิต</button> <button class="btn ghost" id="prCancelBtn" style="display:none" onclick="cancelEditProduction()">ยกเลิกการแก้ไข</button> <span id="prMsg"></span></div>
+ <div class="card"><h3>คิวผลิต (${rows.length})</h3>${table(['วันที่','สินค้า','จำนวน','คนผลิต','กะ','วัตถุดิบที่ใช้ (ตามสูตร)','สถานะ','จัดการ'],rows.map(p=>[p.date,p.product,p.qty+' '+(p.unit||''),p.worker||'',p.shift||'',bomText(p.product,p.qty)+(p.material?' • '+p.material:''),badge(p.status),`<button class="btn small gold" onclick="editProduction(${dataFor('Production').indexOf(p)})">✏️ แก้ไข</button> ${p.status==='รอผลิต'?`<button class="btn small gold" onclick="completeProduction(${dataFor('Production').indexOf(p)})">✅ ผลิตสำเร็จ</button>`:''}`]))}</div>
+ <div class="card"><h3>🧾 สูตรผลิต (BOM) — 1 ชิ้น ใช้วัตถุดิบเท่าไหร่</h3><p class="muted">เพิ่ม/แก้สูตรตรงนี้ครั้งเดียว ทุกครั้งที่สั่งผลิต ระบบจะใช้สูตรนี้คำนวณและตัดสต็อกให้เอง ไม่ต้องพิมพ์ซ้ำทุกครั้ง</p>${table(['สินค้า','วัตถุดิบ','จำนวนต่อ 1 ชิ้น','หน่วย','จัดการ'],dataFor('BOM').map((b,i)=>[b.productCode+' — '+b.product,b.raw,b.perUnit,b.unit,`<button class="btn small" style="background:#a00" onclick="deleteBom(${i})">ลบสูตรนี้</button>`]))}
+ <div class="row r4" style="margin-top:10px"><div><label>สินค้า</label><select id="bomProduct">${dataFor('Products').map(pr=>`<option value="${pr.code}|${pr.name}">${pr.code} — ${pr.name}</option>`).join('')}</select></div><div><label>วัตถุดิบ (จาก Stock)</label><select id="bomRaw">${dataFor('Stock').map(s=>`<option value="${s.name}">${s.code} — ${s.name} (${s.unit})</option>`).join('')}</select></div><div><label>จำนวนต่อ 1 ชิ้น</label><input id="bomPerUnit" type="number" step="0.001" value="0.1"></div><div><label>หน่วย</label><input id="bomUnit" value="กก."></div></div><br><button class="btn gold" onclick="addBom()">➕ เพิ่มสูตร (BOM)</button> <span id="bomMsg"></span></div>`;
+}
+function refreshBomPreview(){
+  var prod=(document.getElementById('prProduct')||{}).value||'';
+  var qty=Number((document.getElementById('prQty')||{}).value||0);
+  var el=document.getElementById('bomPreview'); if(el) el.innerHTML=bomTableHTML(prod,qty);
+  var lb=document.getElementById('bomQtyLabel'); if(lb) lb.textContent=qty;
+}
+function addBom(){
+  var sel=(document.getElementById('bomProduct')||{}).value||'';
+  var parts=sel.split('|'); var code=parts[0]||'', prod=parts[1]||'';
+  var raw=(document.getElementById('bomRaw')||{}).value||'';
+  var per=Number((document.getElementById('bomPerUnit')||{}).value||0);
+  var unit=(document.getElementById('bomUnit')||{}).value||'กก.';
+  var msg=document.getElementById('bomMsg');
+  if(!prod||!raw) return alert('เลือกสินค้าและวัตถุดิบก่อน');
+  if(!per||per<=0) return alert('ใส่จำนวนต่อ 1 ชิ้น ที่มากกว่า 0');
+  var dup=dataFor('BOM').find(function(b){return b.product===prod&&b.raw===raw;});
+  if(dup) return alert('สูตรนี้มีอยู่แล้ว: '+prod+' ใช้ '+raw+' — ถ้าจะเปลี่ยนจำนวน ให้ลบสูตรเก่าแล้วเพิ่มใหม่');
+  var values=[code,prod,raw,per,unit];
+  if(!API){ DEMO.BOM.push({productCode:code,product:prod,raw:raw,perUnit:per,unit:unit}); toast('เพิ่มสูตรแล้ว (โหมดทดลอง)'); render(); return; }
+  sheetPost({action:'saveRow',sheet:'BOM',values:values}).then(function(j){ if(j.ok){ if(msg) msg.textContent=' เพิ่มสูตรแล้ว ✅'; toast('เพิ่มสูตรแล้ว ✅'); loadAll(); } else toast('เพิ่มไม่สำเร็จ: '+(j.error||'')); });
+}
+function deleteBom(full){
+  var b=dataFor('BOM')[full]; if(!b) return;
+  if(!confirm('ลบสูตรนี้ใช่ไหม?\n'+b.product+' ใช้ '+b.raw+' '+b.perUnit+' '+b.unit+' ต่อ 1 ชิ้น')) return;
+  if(!API){ DEMO.BOM.splice(full,1); toast('ลบสูตรแล้ว'); render(); return; }
+  // ลบโดยเขียนทับด้วยสูตรที่เหลือทั้งหมด (BOM ไม่มีคีย์แถวเดี่ยว จึงใช้วิธีล้างแล้วเขียนใหม่)
+  var rest=dataFor('BOM').filter(function(_,i){return i!==full;});
+  sheetPost({action:'resetSheet',sheet:'BOM'}).then(function(){
+    var chain=Promise.resolve();
+    rest.forEach(function(r){ chain=chain.then(function(){ return sheetPost({action:'saveRow',sheet:'BOM',values:[r.productCode,r.product,r.raw,r.perUnit,r.unit]}); }); });
+    chain.then(function(){ toast('ลบสูตรแล้ว ✅'); loadAll(); });
+  });
 }
 function pageAccounting(){
  const rows=dataFor('Accounting');
@@ -235,12 +291,13 @@ function sheetPost(body){
   return fetch(API,{method:'POST',body:JSON.stringify(body)}).then(function(r){return r.json();});
 }
 function rowValues(sheet, obj){
-  if(sheet==='Orders') return [obj.date||'',obj.no||'',obj.customer||'',obj.product||'',Number(obj.qty||0),obj.unit||'',Number(obj.total||0),obj.channel||'',obj.status||''];
+  if(sheet==='Orders') return [obj.date||'',obj.no||'',obj.customer||'',obj.product||'',Number(obj.qty||0),obj.unit||'',Number(obj.total||0),obj.channel||'',obj.status||'',obj.deliveryDate||'',obj.deliveryNote||''];
   if(sheet==='Products') return [obj.code||'',obj.name||'',obj.unit||'',Number(obj.price||0),Number(obj.stock||0),obj.status||'ใช้งาน'];
   if(sheet==='Stock') return [obj.code||'',obj.name||'',Number(obj.qty||0),obj.unit||'',Number(obj.min||0),obj.status||'ปกติ',obj.exp||''];
   if(sheet==='Customers') return [obj.name||'',obj.type||'',obj.phone||'',obj.province||'',obj.addr||'',obj.status||'ใช้งาน'];
   if(sheet==='Suppliers') return [obj.name||'',obj.phone||'',obj.credit||'',obj.status||'ใช้งาน'];
   if(sheet==='Production') return [obj.date||'',obj.product||'',Number(obj.qty||0),obj.unit||'',obj.worker||'',obj.shift||'',obj.material||'',obj.status||''];
+  if(sheet==='BOM') return [obj.productCode||'',obj.product||'',obj.raw||'',Number(obj.perUnit||0),obj.unit||''];
   if(sheet==='Accounting') return [obj.month||'',Number(obj.income||0),Number(obj.expense||0),obj.status||'',obj.note||'',!!obj.locked];
   return [];
 }
@@ -270,13 +327,37 @@ function adjustRawStock(rawName, delta){
 function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function currentUserName(){ try{ var u=JSON.parse(localStorage.getItem('ok1_user')||'{}'); return u.name||'คนผลิต'; }catch(e){ return 'คนผลิต'; } }
 
+// ================== BOM (สูตรผลิต) ==================
+function bomFor(productName){ return dataFor('BOM').filter(function(b){return b.product===productName;}); }
+function bomText(productName, qty){
+  var lines=bomFor(productName);
+  if(!lines.length) return '— ยังไม่มีสูตร (BOM) —';
+  return lines.map(function(b){ return b.raw+' '+(Number(b.perUnit||0)*Number(qty||1))+' '+(b.unit||''); }).join(' • ');
+}
+function bomCheck(productName, qty){
+  var lines=bomFor(productName); var out=[];
+  lines.forEach(function(b){
+    var need=Number(b.perUnit||0)*Number(qty||0);
+    var s=(dataFor('Stock')||[]).find(function(x){return x.name===b.raw;});
+    var have=s?Number(s.qty||0):0;
+    out.push({raw:b.raw, need:need, unit:b.unit||'', have:have, ok:have>=need});
+  });
+  return out;
+}
+function bomTableHTML(productName, qty){
+  var chk=bomCheck(productName, qty);
+  if(!chk.length) return '<p class="muted">ยังไม่มีสูตร (BOM) ของสินค้านี้ — ไปเพิ่มที่เมนู “สูตรผลิต (BOM)” ด้านล่างของเมนูผลิต แล้วระบบจะตัดวัตถุดิบตามสูตรอัตโนมัติ</p>';
+  return '<table><tr><th>วัตถุดิบตามสูตร</th><th>ต้องใช้ (ผลิต '+qty+')</th><th>คงเหลือใน Stock</th><th>พอไหม</th></tr>'+
+    chk.map(function(c){ return '<tr><td>'+c.raw+'</td><td>'+c.need+' '+c.unit+'</td><td>'+c.have+' '+c.unit+'</td><td>'+(c.ok?'✅ พอ':'❌ ไม่พอ ขาด '+(c.need-c.have)+' '+c.unit)+'</td></tr>'; }).join('')+'</table>';
+}
+
 // ================== ออเดอร์ ==================
 var EDITING_ORDER=-1, EDITING_PRODUCTION=-1, EDITING_PRODUCT=-1, EDITING_CUSTOMER='', EDITING_STOCK=-1, EDITING_SUPPLIER=-1;
 function editOrder(full){
   var o=dataFor('Orders')[full]; if(!o) return;
   EDITING_ORDER=full;
   var set=function(id,v){var el=document.getElementById(id);if(el)el.value=v==null?'':v;};
-  set('oCustomer',o.customer); set('oProduct',o.product); set('oQty',o.qty); set('oChannel',o.channel);
+  set('oCustomer',o.customer); set('oProduct',o.product); set('oQty',o.qty); set('oChannel',o.channel); set('oDeliveryDate',o.deliveryDate); set('oDeliveryNote',o.deliveryNote);
   var title=document.getElementById('ordFormTitle'); if(title) title.textContent='✏️ แก้ไขออเดอร์: '+(o.no||'');
   var btn=document.getElementById('ordSaveBtn'); if(btn) btn.textContent='💾 บันทึกการแก้ไข';
   var cancel=document.getElementById('ordCancelBtn'); if(cancel) cancel.style.display='inline-block';
@@ -295,6 +376,8 @@ function addOrder(){
   var p=(document.getElementById('oProduct')||{}).value||'';
   var q=Number((document.getElementById('oQty')||{}).value||0);
   var ch=(document.getElementById('oChannel')||{}).value||'เงินสด';
+  var dDate=(document.getElementById('oDeliveryDate')||{}).value||'';
+  var dNote=(document.getElementById('oDeliveryNote')||{}).value||'';
   var msg=document.getElementById('oMsg');
   if(!c) return alert('เลือกลูกค้าก่อน');
   if(!p) return alert('เลือกสินค้าก่อน');
@@ -304,9 +387,9 @@ function addOrder(){
   var total=q*Number(pr.price||0);
   if(EDITING_ORDER>=0){
     var orig=dataFor('Orders')[EDITING_ORDER]||{};
-    var values=[orig.date||todayStr(), orig.no||'', c, p, q, unit, total, ch, orig.status||'รอคอนเฟิร์ม'];
+    var values=[orig.date||todayStr(), orig.no||'', c, p, q, unit, total, ch, orig.status||'รอคอนเฟิร์ม', dDate||orig.deliveryDate||'', dNote||orig.deliveryNote||''];
     var doSave=function(){
-      if(!API){ var tg=DEMO.Orders[EDITING_ORDER]; if(tg){ tg.customer=c; tg.product=p; tg.qty=q; tg.unit=unit; tg.total=total; tg.channel=ch; } toast('แก้ไขออเดอร์แล้ว ✅'); cancelEditOrder(); render(); return; }
+      if(!API){ var tg=DEMO.Orders[EDITING_ORDER]; if(tg){ tg.customer=c; tg.product=p; tg.qty=q; tg.unit=unit; tg.total=total; tg.channel=ch; tg.deliveryDate=dDate; tg.deliveryNote=dNote; } toast('แก้ไขออเดอร์แล้ว ✅'); cancelEditOrder(); render(); return; }
       sheetPost({action:'updateRowByIndex',sheet:'Orders',rowIndex:EDITING_ORDER+2,values:values}).then(function(j){ if(j.ok){ toast('แก้ไขออเดอร์แล้ว ✅'); cancelEditOrder(); loadAll(); } else toast('แก้ไขไม่สำเร็จ: '+(j.error||'')); });
     };
     // คืนสต็อกเดิม แล้วตัดสต็อกใหม่ (ถ้าเปลี่ยนสินค้า ก็คืนตัวเก่า ตัดตัวใหม่)
@@ -327,8 +410,8 @@ function addOrder(){
   var prod=dataFor('Products').find(function(x){return x.name===p;})||{};
   if(Number(prod.stock||0)<q){ if(msg) msg.textContent=''; return alert('สต็อก '+p+' ไม่พอ — คงเหลือ '+Number(prod.stock||0)+' '+unit+' ต้องการ '+q+' '+unit+'\n\nให้ไปสั่งผลิตเพิ่มก่อน แล้วค่อยมาบันทึกออเดอร์'); }
   var no='ORD-'+todayStr().replace(/-/g,'')+'-'+Math.floor(Math.random()*900+100);
-  var valuesNew=[todayStr(),no,c,p,q,unit,total,ch,'รอคอนเฟิร์ม'];
-  if(!API){ DEMO.Orders.unshift({date:todayStr(),no:no,customer:c,product:p,qty:q,unit:unit,total:total,channel:ch,status:'รอคอนเฟิร์ม'}); adjustProductStock(p,-q); if(msg) msg.textContent=' บันทึกออเดอร์แล้ว + ตัดสต็อกแล้ว (โหมดทดลอง)'; toast('บันทึกออเดอร์แล้ว ✅'); render(); return; }
+  var valuesNew=[todayStr(),no,c,p,q,unit,total,ch,'รอคอนเฟิร์ม',dDate,dNote];
+  if(!API){ DEMO.Orders.unshift({date:todayStr(),no:no,customer:c,product:p,qty:q,unit:unit,total:total,channel:ch,status:'รอคอนเฟิร์ม',deliveryDate:dDate,deliveryNote:dNote}); adjustProductStock(p,-q); if(msg) msg.textContent=' บันทึกออเดอร์แล้ว + ตัดสต็อกแล้ว (โหมดทดลอง)'; toast('บันทึกออเดอร์แล้ว ✅'); render(); return; }
   if(msg) msg.textContent=' กำลังตัดสต็อก + บันทึก...';
   adjustProductStock(p,-q).then(function(r){
     if(!r.ok){ if(msg) msg.textContent=''; toast('บันทึกไม่สำเร็จ: '+r.error); return; }
@@ -342,7 +425,7 @@ function cancelOrder(full){
   var o=dataFor('Orders')[full]; if(!o) return;
   if(o.status==='ยกเลิก') return toast('ออเดอร์นี้ยกเลิกแล้ว');
   if(!confirm('ยกเลิกออเดอร์ '+(o.no||'')+' ใช่ไหม?\nระบบจะคืนสต็อก '+o.product+' จำนวน '+o.qty+' กลับเข้าคลัง')) return;
-  var values=[o.date,o.no,o.customer,o.product,o.qty,o.unit,o.total,o.channel,'ยกเลิก'];
+  var values=[o.date,o.no,o.customer,o.product,o.qty,o.unit,o.total,o.channel,'ยกเลิก',o.deliveryDate||'',o.deliveryNote||''];
   var done=function(){
     if(!API){ if(DEMO.Orders[full]) DEMO.Orders[full].status='ยกเลิก'; toast('ยกเลิกออเดอร์ + คืนสต็อกแล้ว ✅'); render(); return; }
     sheetPost({action:'updateRowByIndex',sheet:'Orders',rowIndex:full+2,values:values}).then(function(j){ if(j.ok){ toast('ยกเลิกออเดอร์ + คืนสต็อกแล้ว ✅'); loadAll(); } else toast('ยกเลิกไม่สำเร็จ: '+(j.error||'')); });
@@ -353,10 +436,10 @@ function changeStatus(kind, full){
   if(kind==='Orders'){
     var o=dataFor('Orders')[full]; if(!o) return;
     if(o.status==='ยกเลิก') return toast('ออเดอร์นี้ยกเลิกแล้ว');
-    var seq=['รอคอนเฟิร์ม','รอผลิต','ส่งแล้ว','สำเร็จ'];
+    var seq=['รอคอนเฟิร์ม','รอผลิต','พร้อมจัดส่ง','จัดส่งแล้ว','สำเร็จ'];
     var nx=seq[seq.indexOf(o.status)+1];
     if(!nx) return toast('ออเดอร์นี้สำเร็จแล้ว');
-    var values=[o.date,o.no,o.customer,o.product,o.qty,o.unit,o.total,o.channel,nx];
+    var values=[o.date,o.no,o.customer,o.product,o.qty,o.unit,o.total,o.channel,nx,o.deliveryDate||'',o.deliveryNote||''];
     if(!API){ if(DEMO.Orders[full]) DEMO.Orders[full].status=nx; toast('เลื่อนสถานะเป็น '+nx); render(); return; }
     sheetPost({action:'updateRowByIndex',sheet:'Orders',rowIndex:full+2,values:values}).then(function(j){ if(j.ok){ toast('เลื่อนสถานะเป็น '+nx+' ✅'); loadAll(); } else toast('เลื่อนสถานะไม่สำเร็จ: '+(j.error||'')); });
     return;
@@ -369,15 +452,25 @@ function changeStatus(kind, full){
   }
 }
 
+function recordDelivery(full){
+  var o=dataFor('Orders')[full]; if(!o) return;
+  if(o.status!=='พร้อมจัดส่ง'&&o.status!=='จัดส่งแล้ว'){ return toast('ออเดอร์นี้ยังไม่ถึงขั้นจัดส่ง (สถานะปัจจุบัน: '+o.status+')'); }
+  var d=prompt('📦 บันทึกการจัดส่ง — ออเดอร์ '+(o.no||'')+'\n\nวันที่จัดส่ง (รูปแบบ 2026-11-28):', o.deliveryDate||todayStr());
+  if(d===null) return;
+  var note=prompt('หลักฐานการจัดส่ง (เช่น ชื่อคนส่ง / เลขพัสดุ / ลูกค้าเซ็นรับแล้ว):', o.deliveryNote||'');
+  if(note===null) return;
+  var values=[o.date,o.no,o.customer,o.product,o.qty,o.unit,o.total,o.channel,'จัดส่งแล้ว',d,note];
+  if(!API){ if(DEMO.Orders[full]){ DEMO.Orders[full].status='จัดส่งแล้ว'; DEMO.Orders[full].deliveryDate=d; DEMO.Orders[full].deliveryNote=note; } toast('บันทึกจัดส่งแล้ว ✅'); render(); return; }
+  sheetPost({action:'updateRowByIndex',sheet:'Orders',rowIndex:full+2,values:values}).then(function(j){ if(j.ok){ toast('บันทึกจัดส่งแล้ว ✅'); loadAll(); } else toast('บันทึกไม่สำเร็จ: '+(j.error||'')); });
+}
+
 // ================== ผลิต ==================
 function editProduction(full){
   var pr=dataFor('Production')[full]; if(!pr) return;
   EDITING_PRODUCTION=full;
   var set=function(id,v){var el=document.getElementById(id);if(el)el.value=v==null?'':v;};
-  set('prProduct',pr.product); set('prQty',pr.qty); set('prShift',pr.shift);
-  // แยกจำนวนวัตถุดิบออกจากข้อความ material เช่น "พริกแห้ง จินดา (5 กก.)"
-  var mm=String(pr.material||'').match(/\(([\d.]+)/);
-  set('prMaterialQty', mm?mm[1]:'');
+  set('prProduct',pr.product); set('prQty',pr.qty); set('prShift',pr.shift); refreshBomPreview();
+
   var title=document.getElementById('prFormTitle'); if(title) title.textContent='✏️ แก้ไขสั่งผลิต: '+pr.product+' ('+pr.date+')';
   var btn=document.getElementById('prSaveBtn'); if(btn) btn.textContent='💾 บันทึกการแก้ไข';
   var cancel=document.getElementById('prCancelBtn'); if(cancel) cancel.style.display='inline-block';
@@ -388,7 +481,7 @@ function cancelEditProduction(){
   EDITING_PRODUCTION=-1;
   var q=document.getElementById('prQty'); if(q) q.value=50;
   var m=document.getElementById('prMaterial'); if(m) m.value='';
-  var mq=document.getElementById('prMaterialQty'); if(mq) mq.value=5;
+
   var title=document.getElementById('prFormTitle'); if(title) title.textContent='➕ สั่งผลิตใหม่ + เบิกวัตถุดิบ';
   var btn=document.getElementById('prSaveBtn'); if(btn) btn.textContent='สั่งผลิต + เบิกวัตถุดิบ';
   var cancel=document.getElementById('prCancelBtn'); if(cancel) cancel.style.display='none';
@@ -397,16 +490,13 @@ function addProduction(){
   var prod=(document.getElementById('prProduct')||{}).value||'';
   var qty=Number((document.getElementById('prQty')||{}).value||0);
   var shift=(document.getElementById('prShift')||{}).value||'กะเช้า';
-  var matItem=(document.getElementById('prMaterialItem')||{}).value||'';
-  var matQty=Number((document.getElementById('prMaterialQty')||{}).value||0);
   var extra=(document.getElementById('prMaterial')||{}).value||'';
   if(!prod) return alert('เลือกสินค้าที่จะผลิตก่อน');
   if(!qty||qty<=0) return alert('ใส่จำนวนที่มากกว่า 0');
   var pr=dataFor('Products').find(function(x){return x.name===prod;})||{};
   var unit=pr.unit||'กระปุก';
-  var matUnit=''; var raw=dataFor('Stock').find(function(x){return x.name===matItem;}); if(raw) matUnit=raw.unit||'';
-  var material=matItem? (matItem+' ('+matQty+' '+matUnit+')') : extra;
-  if(extra) material += (matItem?' • '+extra : extra);
+  var material=bomText(prod,qty);
+  if(extra) material += ' • '+extra;
   var worker=currentUserName();
   var msg=document.getElementById('prMsg');
   if(EDITING_PRODUCTION>=0){
@@ -425,23 +515,42 @@ function addProduction(){
 function completeProduction(full){
   var pr=dataFor('Production')[full]; if(!pr) return;
   if(pr.status==='สำเร็จ') return toast('ผลิตเสร็จแล้ว');
-  // แยกวัตถุดิบ + จำนวน จาก material เช่น "พริกแห้ง จินดา (5 กก.)"
-  var matName='', matQty=0;
-  var m=String(pr.material||'').match(/^(.+?)\s*\(([\d.]+)/);
-  if(m){ matName=m[1].trim(); matQty=Number(m[2]||0); }
-  if(!confirm('ยืนยันผลิตสำเร็จ: '+pr.product+' '+pr.qty+' '+(pr.unit||'')+'\n\nระบบจะ:\n• สินค้า '+pr.product+' +'+pr.qty+' เข้าคลัง\n'+(matName?('• วัตถุดิบ '+matName+' -'+matQty+' ออกจาก Stock'):''))) return;
+  var chk=bomCheck(pr.product||'', Number(pr.qty||0));
+  if(!chk.length){
+    if(!confirm('สินค้านี้ยังไม่มีสูตร (BOM)\n\nยืนยันผลิตสำเร็จ: '+pr.product+' '+pr.qty+' '+(pr.unit||'')+' ใช่ไหม?\n(จะเพิ่มสินค้าเข้าคลังอย่างเดียว ไม่ตัดวัตถุดิบ เพราะไม่มีสูตร)')) return;
+  } else {
+    var short=chk.filter(function(c){return !c.ok;});
+    var detail=chk.map(function(c){return '• '+c.raw+': ต้องใช้ '+c.need+' '+c.unit+' (มี '+c.have+')'+(c.ok?' ✅':' ❌ ขาด '+(c.need-c.have)+' '+c.unit);}).join('\n');
+    if(short.length){
+      return alert('❌ ผลิตไม่สำเร็จ — วัตถุดิบไม่พอ\n\n'+detail+'\n\nให้ไปสั่งซื้อวัตถุดิบเข้า Stock ก่อน แล้วค่อยกดผลิตสำเร็จ');
+    }
+    if(!confirm('ยืนยันผลิตสำเร็จ: '+pr.product+' '+pr.qty+' '+(pr.unit||'')+'\n\nระบบจะ:\n• สินค้า '+pr.product+' +'+pr.qty+' เข้าคลัง\n'+detail)) return;
+  }
   var doSave=function(){
     var values=[pr.date,pr.product,pr.qty,pr.unit,pr.worker,pr.shift,pr.material,'สำเร็จ'];
     if(!API){ if(DEMO.Production[full]) DEMO.Production[full].status='สำเร็จ'; toast('ผลิตสำเร็จ ✅ สินค้าเข้าคลังแล้ว'); render(); return; }
     sheetPost({action:'updateRowByIndex',sheet:'Production',rowIndex:full+2,values:values}).then(function(j){ if(j.ok){ toast('ผลิตสำเร็จ ✅'); loadAll(); } else toast('บันทึกไม่สำเร็จ: '+(j.error||'')); });
   };
-  var step1 = matName&&matQty>0 ? adjustRawStock(matName,-matQty) : Promise.resolve({ok:true});
-  step1.then(function(r1){
-    if(!r1.ok){ toast('ผลิตไม่สำเร็จ: '+r1.error+'\n(วัตถุดิบไม่พอ — ให้สั่งซื้อวัตถุดิบเข้า Stock ก่อน)'); return; }
-    adjustProductStock(pr.product||'', Number(pr.qty||0)).then(function(r2){
-      if(!r2.ok){ if(matName&&matQty>0) adjustRawStock(matName,matQty); toast('ผลิตไม่สำเร็จ: '+r2.error); return; }
+  // ตัดวัตถุดิบทุกตัวตามสูตร ทีละตัว (ถ้าตัวไหนตัดไม่สำเร็จ จะคืนตัวที่ตัดไปแล้วกลับ)
+  var deducted=[];
+  var chain=Promise.resolve();
+  chk.forEach(function(c){
+    chain=chain.then(function(){ return adjustRawStock(c.raw,-c.need).then(function(r){ if(!r.ok) throw new Error(r.error); deducted.push(c); return r; }); });
+  });
+  chain.then(function(){
+    return adjustProductStock(pr.product||'', Number(pr.qty||0)).then(function(r2){
+      if(!r2.ok){
+        var back=Promise.resolve();
+        deducted.forEach(function(c){ back=back.then(function(){ return adjustRawStock(c.raw,c.need); }); });
+        back.then(function(){ toast('ผลิตไม่สำเร็จ: '+r2.error); });
+        return;
+      }
       doSave();
     });
+  }).catch(function(e){
+    var back=Promise.resolve();
+    deducted.forEach(function(c){ back=back.then(function(){ return adjustRawStock(c.raw,c.need); }); });
+    back.then(function(){ toast('ผลิตไม่สำเร็จ: '+e.message); });
   });
 }
 
