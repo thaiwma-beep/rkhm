@@ -9,15 +9,7 @@ header b{font-size:20px}header b span{color:#f5c451}.pill{background:#f5c451;col
 nav h4{margin:14px 6px 6px;font-size:12px;color:#888;letter-spacing:.08em}nav button{display:flex;gap:10px;width:100%;text-align:left;background:transparent;border:0;padding:10px 10px;border-radius:10px;cursor:pointer;font-size:14px;color:#22123e}nav button.active,nav button:hover{background:#efe7ff;font-weight:700}
 main{flex:1;padding:18px;min-width:0}.topbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
 h1{margin:4px 0 2px;font-size:26px}.muted{color:#666;font-size:13px}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}nav{display:none}main{padding-bottom:86px}}
-.hamburger{display:none;background:#f5c451;color:#22123e;border:0;padding:8px 12px;border-radius:999px;font-weight:700;cursor:pointer;font-size:16px}
-@media(max-width:900px){.hamburger{display:inline-block}nav.open{display:block!important;position:fixed;left:0;top:0;bottom:0;width:240px;max-width:68vw;z-index:999;background:#fff;box-shadow:4px 0 20px rgba(0,0,0,.3);padding:14px;overflow:auto;height:100vh}}
-.navBackdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:998}
-.logoutNav{display:block!important;width:100%;text-align:center!important;background:#fde8e8!important;color:#a00!important;font-weight:800!important;border:1px solid #f5a3a3!important;border-radius:10px!important;margin-bottom:8px!important}
-.closeNav{display:none!important;width:100%;text-align:right!important;background:#f5c451!important;color:#22123e!important;font-weight:800!important;border-radius:10px!important;margin-bottom:8px!important}
-@media(max-width:900px){.closeNav{display:block!important}}
-.mobileNav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:997;background:#22123e;padding:8px 6px calc(8px + env(safe-area-inset-bottom));overflow-x:auto;white-space:nowrap;box-shadow:0 -2px 12px rgba(0,0,0,.25)} .mobileNav button{background:#3a2a66;color:#fff;border:0;padding:10px 12px;border-radius:999px;font-size:13px;margin:0 3px;cursor:pointer;white-space:nowrap} .mobileNav button.active{background:#f5c451;color:#22123e;font-weight:700}
-@media(max-width:900px){.mobileNav{display:block}}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}
 .kpi{background:#fff;border:1px solid #e5ddff;border-radius:16px;padding:14px}.kpi b{font-size:22px}.kpi small{display:block;color:#666}
 .card{background:#fff;border:1px solid #e5ddff;border-radius:16px;padding:16px;margin-bottom:14px}.card h3{margin:0 0 10px}
 table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:9px 8px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}th{background:#22123e;color:#fff;white-space:nowrap}
@@ -31,23 +23,19 @@ input,select,textarea{padding:9px 10px;border:1px solid #ccc;border-radius:9px;w
 .config{background:#fff3cd;border:1px solid #e6b800;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.7}
 .lockbox{background:#fde8e8;border:1px solid #f5a3a3;border-radius:12px;padding:12px 14px}
 .flex{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-</style></head><body>
-<div id="loginScreen" style="position:fixed;inset:0;background:#22123e;z-index:1000;display:none;align-items:center;justify-content:center;padding:16px"><div style="background:#fff;border-radius:20px;padding:28px;width:100%;max-width:420px;text-align:center"><div style="font-size:42px">🥫</div><h2 style="margin:8px 0 2px">OK1 ERP</h2><p style="color:#666;font-size:13px;margin:0 0 16px">ระบบร้านผลิตอาหาร — น้ำพริกเผา • หมูหยอง • ไส้กรอก</p>
-<label style="display:block;text-align:left">ชื่อผู้ใช้ (เลือกจากรายชื่อใน Sheet)</label><select id="loginName"><option value="เจ้าของ">เจ้าของ (owner)</option><option value="แอดมิน">แอดมิน (admin)</option><option value="คนผลิต">คนผลิต (staff)</option><option value="สำนักงานบัญชี">สำนักงานบัญชี (accounting)</option></select>
-<div style="height:10px"></div><label style="display:block;text-align:left">รหัสผ่าน</label><input id="loginPass" type="password" placeholder="ใส่รหัสผ่านของผู้ใช้นั้น">
-<p style="font-size:12px;color:#888;margin:8px 0 0">รหัสเริ่มต้น: เจ้าของ <b>1111</b> • แอดมิน <b>2222</b> • คนผลิต <b>3333</b> • สำนักงานบัญชี <b>4444</b></p>
-<div style="height:14px"></div><button class="btn gold" style="width:100%" onclick="doLogin()">🔓 เข้าสู่ระบบ</button>
-<p id="loginErr" style="color:#c00;font-size:13px;display:none">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</p></div></div>
-<header><button class="hamburger" onclick="toggleMobileMenu()">☰ เมนู</button><div><b>OK1 <span>ERP</span></b> &nbsp;ระบบร้านผลิตอาหาร — น้ำพริกเผา • หมูหยอง • ไส้กรอก</div>
-<div class="flex"><span id="conn" class="pill">● โหมดทดลอง (Demo)</span><select id="roleSel" style="width:auto" onchange="setRole(this.value)"><option value="owner">บทบาท: เจ้าของ</option><option value="admin">แอดมิน</option><option value="staff">พนักงาน / คนผลิต</option><option value="accounting">สำนักงานบัญชี</option></select><button class="btn gold small" onclick="doLogout()">🚪 ออกจากระบบ</button></div></header><div class="navBackdrop" id="navBackdrop" onclick="toggleMobileMenu(true)"></div>
-<div class="layout">
-<nav id="nav"></nav>
-<main>
-<div id="page"></div>
-</main></div>
+.hamburger{display:none;background:#f5c451;color:#22123e;border:0;padding:8px 12px;border-radius:999px;font-weight:700;cursor:pointer;font-size:16px}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}nav{display:none}main{padding-bottom:86px}.hamburger{display:inline-block}nav.open{display:block!important;position:fixed;left:0;top:0;bottom:0;width:220px;max-width:62vw;z-index:999;background:#fff;box-shadow:4px 0 20px rgba(0,0,0,.3);padding:14px;overflow:auto;height:100vh}.closeNav{display:block!important}.mobileNav{display:block}}
+.navBackdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:998;cursor:pointer}
+.closeNav{position:sticky!important;top:0!important;z-index:5!important;display:none!important;width:100%;text-align:right!important;background:#f5c451!important;color:#22123e!important;font-weight:800!important;border-radius:10px!important;margin-bottom:8px!important}
+.logoutNav{display:block!important;width:100%;text-align:center!important;background:#fde8e8!important;color:#a00!important;font-weight:800!important;border:1px solid #f5a3a3!important;border-radius:10px!important;margin-bottom:8px!important}
+.mobileNav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:997;background:#22123e;padding:8px 6px calc(8px + env(safe-area-inset-bottom));overflow-x:auto;white-space:nowrap;box-shadow:0 -2px 12px rgba(0,0,0,.25)} .mobileNav button{background:#3a2a66;color:#fff;border:0;padding:10px 12px;border-radius:999px;font-size:13px;margin:0 3px;cursor:pointer;white-space:nowrap} .mobileNav button.active{background:#f5c451;color:#22123e;font-weight:700}
+</style></head>
+<body>
+<div id="loginScreen" style="position:fixed;inset:0;background:#22123e;z-index:1000;display:none;align-items:center;justify-content:center;padding:16px"><div style="background:#fff;border-radius:20px;padding:28px;width:100%;max-width:420px;text-align:center"><div style="font-size:42px">🥫</div><h2 style="margin:8px 0 2px">OK1 ERP</h2><p style="color:#666;font-size:13px;margin:0 0 16px">ระบบร้านผลิตอาหาร — น้ำพริกเผา • หมูหยอง • ไส้กรอก</p><label style="display:block;text-align:left">ชื่อผู้ใช้ (เลือกจากรายชื่อใน Sheet)</label><select id="loginName"><option value="เจ้าของ">เจ้าของ (owner)</option><option value="แอดมิน">แอดมิน (admin)</option><option value="คนผลิต">คนผลิต (staff)</option><option value="สำนักงานบัญชี">สำนักงานบัญชี (accounting)</option></select><div style="height:10px"></div><label style="display:block;text-align:left">รหัสผ่าน</label><input id="loginPass" type="password" placeholder="ใส่รหัสผ่านของผู้ใช้นั้น"><p style="font-size:12px;color:#888;margin:8px 0 0">รหัสเริ่มต้น: เจ้าของ <b>1111</b> • แอดมิน <b>2222</b> • คนผลิต <b>3333</b> • สำนักงานบัญชี <b>4444</b></p><div style="height:14px"></div><button class="btn gold" style="width:100%" onclick="doLogin()">🔓 เข้าสู่ระบบ</button><p id="loginErr" style="color:#c00;font-size:13px;display:none">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</p></div></div>
+<header><button class="hamburger" onclick="toggleMobileMenu()">☰ เมนู</button><div><b>OK1 <span>ERP</span></b> &nbsp;ระบบร้านผลิตอาหาร — น้ำพริกเผา • หมูหยอง • ไส้กรอก</div><div class="flex"><span id="conn" class="pill">● โหมดทดลอง (Demo)</span><select id="roleSel" style="width:auto" onchange="setRole(this.value)"><option value="owner">บทบาท: เจ้าของ</option><option value="admin">บทบาท: แอดมิน</option><option value="staff">บทบาท: พนักงาน / คนผลิต</option><option value="accounting">บทบาท: สำนักงานบัญชี</option></select><button class="btn gold small" onclick="doLogout()">🚪 ออกจากระบบ</button></div></header><div class="navBackdrop" id="navBackdrop" onclick="toggleMobileMenu(true)"></div>
+<div class="layout"><nav id="nav"></nav><main><div id="page"></div></main></div>
 <nav class="mobileNav" id="mobileNav"><button onclick="go('dashboard')">📊 แดชบอร์ด</button><button onclick="go('orders')">🧾 ออเดอร์</button><button onclick="go('customers')">👥 ลูกค้า</button><button onclick="go('products')">🥫 สินค้า</button><button onclick="go('stock')">📦 สต็อก</button><button onclick="go('production')">🏭 ผลิต</button><button onclick="go('suppliers')">🚚 ซัพพลายเออร์</button><button onclick="go('accounting')">🧮 บัญชี</button><button onclick="go('users')">👤 ผู้ใช้</button><button onclick="go('settings')">⚙️ ตั้งค่า</button><button style="background:#a00!important" onclick="doLogout()">🚪 ออก</button></nav><div class="toast" id="toast"></div>
 <script>
-// ============ DEMO DATA — ตรงกับไฟล์เดิม ============
 const DEMO = {
  Dashboard:{income:128500,expense:76400,orders:42,lowStock:3},
  Orders:[
@@ -70,7 +58,7 @@ const DEMO = {
  ],
  Customers:[
   {name:'อารีย์',type:'ปลีก',phone:'เบอร์หลัก 081-xxx-xxxx',province:'กรุงเทพมหานคร',addr:'หมู่ 1',status:'ใช้งาน'},
-  {name:'ร้านค้าปลีก กรุงเทพมหานคร',type:'เครดิต',phone:'02-xxx-xxxx',province:'กรุงเทพมหานคร',addr:'-',status:'ใช้งาน'},
+  {name:'ร้านค้าปลีก กรุงเทพมหานคร',type:'ทั่วไป',phone:'02-xxx-xxxx',province:'กรุงเทพมหานคร',addr:'-',status:'ใช้งาน'},
  ],
  Suppliers:[
   {name:'ซัพพลายเออร์ หมูสด',phone:'เบอร์หลัก 081-xxx-xxxx',credit:'เครดิต 7 วัน',status:'ใช้งาน'},
@@ -78,11 +66,10 @@ const DEMO = {
  ],
  Production:[
   {date:'2026-11-25',product:'น้ำพริกเผาโฮมเมด',qty:50,unit:'กระปุก',worker:'คนผลิต กะเช้า',shift:'กะเช้า',material:'เบิกใช้ผลิต: พริกแห้ง 5 กก.',status:'รอผลิต'},
-  {date:'2026-11-24',product:'หมูหยองพรีเมียม',qty:100,unit:'กระปุก',worker:'คนผลิต กะเช้า',shift:'กะเช้า',material:'เบิกใช้ผลิต: หมูบด 20 กก.',status:'สำเร็จ'},
  ],
  Accounting:[
-  {month:'2026-11',income:128500,expense:76400,locked:false,note:'รอส่งต่อสำนักงานบัญชี'},
-  {month:'2026-10',income:112000,expense:69000,locked:true,note:'ส่งแล้ว / ล็อคแล้ว'},
+  {month:'2026-11',income:128500,expense:76400,status:'รอคอนเฟิร์ม',note:'รอส่งต่อสำนักงานบัญชี',locked:false},
+  {month:'2026-10',income:112000,expense:69000,status:'ล็อคแล้ว',note:'ส่งแล้ว',locked:true},
  ],
  Users:[
   {name:'เจ้าของ',role:'owner',pass:'1111',note:'ดูได้ทุกอย่าง / ล็อคยอดเดือนได้'},
@@ -95,19 +82,17 @@ let ROLE='owner';
 let CURRENT='dashboard';
 let FILTER={q:'',status:'ทั้งหมด'};
 let API=localStorage.getItem('ok1_api')||'';
-let LIVE=null; // ข้อมูลจริงจาก Sheet ถ้าเชื่อมแล้ว
-
-function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',2600);}
-function setRole(v){ROLE=v;toast('เปลี่ยนบทบาทเป็น: '+v);render();}
-function saveApi(){const v=document.getElementById('apiUrl').value.trim();if(!v)return alert('วาง URL Apps Script ก่อน');localStorage.setItem('ok1_api',v);API=v;document.getElementById('conn').textContent='● เชื่อม Google Sheet แล้ว';toast('บันทึก URL แล้ว กำลังโหลดข้อมูลจริง...');loadAll();}
-async function loadAll(){
-  if(!API) return;
-  try{const r=await fetch(API+'?action=getAll');const j=await r.json();if(j.ok&&j.data){LIVE=normalizeData(j.data);document.getElementById('conn').textContent='● เชื่อม Google Sheet แล้ว';render();}}catch(e){toast('เชื่อม Sheet ไม่สำเร็จ: '+e.message);}
-}
-
+let LIVE=null;
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',2600)}
+function setRole(r){ROLE=r;localStorage.setItem('ok1_user',JSON.stringify({name:'เจ้าของ',role:r}));render();}
+function saveApi(){const v=document.getElementById('apiUrl').value.trim();if(!v)return alert('ใส่ URL Web App ก่อน');localStorage.setItem('ok1_api',v);API=v;toast('บันทึก URL แล้ว กำลังโหลดข้อมูลจริง...');loadAll();}
 const KEYMAP={'ชื่อลูกค้า':'name','ชื่อ':'name','ประเภท':'type','เบอร์หลัก':'phone','จังหวัด':'province','ที่อยู่':'addr','สถานะ':'status','รหัส':'code','สินค้า':'name','หน่วย':'unit','ราคา':'price','สต็อก':'stock','วัตถุดิบ':'name','จำนวน':'qty','ขั้นต่ำ':'min','วันหมดอายุ':'exp','วันที่':'date','เลขที่':'no','ลูกค้า':'customer','ยอด':'total','ช่องทาง':'channel','ชื่อซัพพลายเออร์':'name','เครดิต':'credit','คนผลิต':'worker','กะ':'shift','เบิกใช้ผลิต':'material','เดือน':'month','รายรับ':'income','รายจ่าย':'expense','หมายเหตุ':'note','ล็อคแล้ว':'locked','ชื่อผู้ใช้':'name','รหัสผ่าน':'pass','บทบาท':'role','สิทธิ์':'note','ตัวชี้วัด':'name','ค่า':'price'};
 function normalizeRow(r){const o={};Object.keys(r||{}).forEach(k=>{const nk=KEYMAP[k]||k;o[nk]=r[k];});if(o.date&&typeof o.date==='string'&&o.date.includes('T'))o.date=o.date.slice(0,10);return o;}
 function normalizeData(data){const out={};Object.keys(data||{}).forEach(k=>{out[k]=(data[k]||[]).map(normalizeRow);});return out;}
+async function loadAll(){
+  if(!API) return;
+  try{const r=await fetch(API+'?action=getAll');const txt=await r.text();let j=null;try{j=JSON.parse(txt);}catch(e){}if(!j||!j.ok){toast('เชื่อม Sheet ไม่สำเร็จ');return;}LIVE=normalizeData(j.data);document.getElementById('conn').textContent='● เชื่อม Google Sheet แล้ว';render();}catch(e){toast('เชื่อม Sheet ไม่สำเร็จ: '+e.message);}
+}
 function dataFor(key){ if(LIVE&&LIVE[key]&&LIVE[key].length) return LIVE[key]; return DEMO[key]||[]; }
 function badge(s){
   const m={'รอคอนเฟิร์ม':'warn','รอผลิต':'warn','ส่งแล้ว':'info','สำเร็จ':'ok','สำเร็จ ':'ok','ยกเลิก':'bad','ใช้งาน':'ok','พักการสั่งซื้อ':'bad','วัตถุดิบใกล้หมด':'bad','ปกติ':'ok','ล็อคแล้ว':'bad','ส่งออก':'info'};
@@ -116,8 +101,7 @@ function badge(s){
 function money(n){return Number(n||0).toLocaleString('th-TH')+' ฿';}
 function table(heads,rows){return `<div style="overflow-x:auto"><table><tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</table></div>`;}
 function filterRows(rows,fields){let out=rows;if(FILTER.q){const q=FILTER.q.toLowerCase();out=out.filter(r=>fields.some(f=>String(r[f]||'').toLowerCase().includes(q)));}if(FILTER.status!=='ทั้งหมด'){out=out.filter(r=>Object.values(r).includes(FILTER.status));}return out;}
-function searchBar(statuses){return `<div class="toolbar"><input placeholder="🔍 ค้นหา..." value="${FILTER.q}" oninput="FILTER.q=this.value;render()"><select style="max-width:180px" onchange="FILTER.status=this.value;render()"><option>ทั้งหมด</option>${statuses.map(s=>`<option ${FILTER.status===s?'selected':''}>${s}</option>`).join('')}</select><button class="btn ghost" onclick="FILTER={q:'',status:'ทั้งหมด'};render()">ล้างตัวกรอง</button></div>`;}
-
+function searchBar(statuses){return `<div class="toolbar"><input placeholder="🔍 ค้นหา..." value="${FILTER.q}" oninput="FILTER.q=this.value;render()"><select style="max-width:180px" onchange="FILTER.status=this.value;render()"><option>ทั้งหมด</option>${statuses.map(s=>`<option ${FILTER.status===s?'selected':''}>${s}</option>`).join('')}</select></div>`;}
 const NAV=[
  {k:'dashboard',t:'แดชบอร์ด',i:'📊',g:'หลัก'},
  {k:'orders',t:'ออเดอร์ / ขาย',i:'🧾',g:'ขาย'},
@@ -131,7 +115,6 @@ const NAV=[
  {k:'settings',t:'ตั้งค่าเชื่อม Sheet',i:'⚙️',g:'ตั้งค่า'},
 ];
 
-
 var PERMS={owner:['dashboard','orders','customers','products','stock','production','suppliers','accounting','users','settings'],admin:['dashboard','orders','customers','products','stock','production','suppliers','accounting','settings'],staff:['dashboard','orders','production','stock','products'],accounting:['dashboard','orders','customers','accounting']};
 function allowedPages(){return PERMS[ROLE]||PERMS['owner'];}
 function userList(){var live=[];try{live=dataFor('Users');}catch(e){}if(live&&live.length)return live;return DEMO.Users;}
@@ -144,10 +127,11 @@ function toggleMobileMenu(forceClose){
   nav.classList.toggle('open', willOpen);
   if(bd) bd.style.display = willOpen ? 'block' : 'none';
   document.body.style.overflow = willOpen ? 'hidden' : '';
+  var hb=document.querySelector('.hamburger'); if(hb) hb.textContent = willOpen ? '✕ ปิดเมนู' : '☰ เมนู';
 }
 function renderNav(){let g='';var allow=allowedPages();document.getElementById('nav').innerHTML=`<button class="closeNav" onclick="toggleMobileMenu(true)">✕ ปิดเมนู</button><button class="logoutNav" onclick="doLogout()">🚪 ออกจากระบบ</button>`+NAV.filter(function(n){return allow.indexOf(n.k)>=0;}).map(function(n){let h='';if(n.g!==g){g=n.g;h=`<h4>${g.toUpperCase()}</h4>`;}return h+`<button class="${CURRENT===n.k?'active':''}" onclick="go('${n.k}')">${n.i} ${n.t}</button>`;}).join('');renderMobileNav();}
 function renderMobileNav(){var el=document.getElementById('mobileNav');if(!el)return;var allow=allowedPages();el.innerHTML=NAV.filter(function(n){return allow.indexOf(n.k)>=0;}).map(function(n){return `<button class="${CURRENT===n.k?'active':''}" onclick="go('${n.k}')">${n.i} ${n.t}</button>`;}).join('')+`<button style="background:#a00!important" onclick="doLogout()">🚪 ออก</button>`;}
-function go(k){if(allowedPages().indexOf(k)<0){toast('บทบาทนี้ไม่มีสิทธิ์เข้าเมนูนี้');return;}CURRENT=k;var nv=document.getElementById('nav');if(nv)nv.classList.remove('open');var bd=document.getElementById('navBackdrop');if(bd)bd.style.display='none';document.body.style.overflow='';render();}
+function go(k){if(allowedPages().indexOf(k)<0){toast('บทบาทนี้ไม่มีสิทธิ์เข้าเมนูนี้');return;}CURRENT=k;var nv=document.getElementById('nav');if(nv)nv.classList.remove('open');var bd=document.getElementById('navBackdrop');if(bd)bd.style.display='none';document.body.style.overflow='';var hb=document.querySelector('.hamburger');if(hb)hb.textContent='☰ เมนู';render();}
 function render(){refreshLoginUsers();renderNav();const el=document.getElementById('page');if(CURRENT==='dashboard')el.innerHTML=pageDashboard();else if(CURRENT==='orders')el.innerHTML=pageOrders();else if(CURRENT==='products')el.innerHTML=pageProducts();else if(CURRENT==='stock')el.innerHTML=pageStock();else if(CURRENT==='customers')el.innerHTML=pageCustomers();else if(CURRENT==='suppliers')el.innerHTML=pageSuppliers();else if(CURRENT==='production')el.innerHTML=pageProduction();else if(CURRENT==='accounting')el.innerHTML=pageAccounting();else if(CURRENT==='users')el.innerHTML=pageUsers();else if(CURRENT==='settings')el.innerHTML=pageSettings();window.scrollTo(0,0);}
 
 function pageDashboard(){
@@ -285,6 +269,7 @@ function doLogout(){
   var nv=document.getElementById('nav'); if(nv) nv.classList.remove('open');
   var bd=document.getElementById('navBackdrop'); if(bd) bd.style.display='none';
   document.body.style.overflow='';
+  var hb=document.querySelector('.hamburger'); if(hb) hb.textContent='☰ เมนู';
   var ls=document.getElementById('loginScreen'); if(ls) ls.style.display='flex';
   var lp=document.getElementById('loginPass'); if(lp) lp.value='';
   toast('ออกจากระบบแล้ว');
@@ -321,6 +306,7 @@ function changeStatus(kind,i){const seq=['รอคอนเฟิร์ม','�
 function lockMonth(){if(ROLE!=='owner')return alert('เฉพาะเจ้าของเท่านั้น');const r=DEMO.Accounting.find(x=>x.month==='2026-11');if(r)r.locked=true;toast('ล็อคยอดเดือน 2026-11 แล้ว');render();}
 function exportCSV(){const rows=dataFor('Orders');let csv='วันที่,เลขที่,ลูกค้า,สินค้า,จำนวน,ยอด,สถานะ\n'+rows.map(o=>[o.date,o.no,o.customer,o.product,o.qty,o.total,o.status].join(',')).join('\n');const b=new Blob(['\ufeff'+csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='OK1-Orders-2026-11.csv';a.click();document.getElementById('exMsg').textContent=' ดาวน์โหลดแล้ว';}
 refreshLoginUsers(); checkLogin();
+(function(){ var nv=document.getElementById('nav'); if(nv) nv.classList.remove('open'); var bd=document.getElementById('navBackdrop'); if(bd) bd.style.display='none'; document.body.style.overflow=''; })();
 render();
 if(API){document.getElementById('conn').textContent='● เชื่อม Google Sheet แล้ว';loadAll();}
 </script></body></html>
