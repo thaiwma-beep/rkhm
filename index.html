@@ -157,13 +157,13 @@ function pageDashboard(){
 function pageOrders(){
  const rows=filterRows(dataFor('Orders'),['customer','product','no','status']);
  return `<h1>🧾 ออเดอร์ / ขาย</h1><p class="muted">ช่องทาง: เงินสด / เครดิต • สถานะ: รอคอนเฟิร์ม → รอผลิต → ส่งแล้ว → สำเร็จ</p>${searchBar(['รอคอนเฟิร์ม','รอผลิต','ส่งแล้ว','สำเร็จ','ยกเลิก'])}
- <div class="card"><h3>➕ เพิ่มออเดอร์ใหม่</h3><div class="row r4"><div><label>ลูกค้า (เลือกจากฐานลูกค้า)</label><select id="oCustomer">${dataFor('Customers').map(c=>`<option value="${c.name}">${c.name} (${c.type||''})</option>`).join('')}</select></div><div><label>สินค้า</label><select id="oProduct">${dataFor('Products').map(pr=>`<option value="${pr.name}">${pr.code} — ${pr.name}</option>`).join('')}</select></div><div><label>จำนวน</label><input id="oQty" type="number" value="10"></div><div><label>ช่องทาง</label><select id="oChannel"><option>เงินสด</option><option>เครดิต</option></select></div></div><br><button class="btn" onclick="addOrder()">บันทึกออเดอร์</button> <span id="oMsg"></span></div>
- <div class="card"><h3>รายการทั้งหมด (${rows.length})</h3>${table(['วันที่','เลขที่','ลูกค้า','สินค้า','จำนวน','ยอด','ช่องทาง','สถานะ','จัดการ'],rows.map((o,i)=>[o.date,o.no,o.customer,o.product,o.qty+' '+(o.unit||''),money(o.total),o.channel||'',badge(o.status),`<button class="btn small" onclick="changeStatus('Orders',${i})">เลื่อนสถานะ →</button>`]))}</div>`;
+ <div class="card"><h3 id="ordFormTitle">➕ เพิ่มออเดอร์ใหม่</h3><div class="row r4"><div><label>ลูกค้า (เลือกจากฐานลูกค้า)</label><select id="oCustomer">${dataFor('Customers').map(c=>`<option value="${c.name}">${c.name} (${c.type||''})</option>`).join('')}</select></div><div><label>สินค้า</label><select id="oProduct">${dataFor('Products').map(pr=>`<option value="${pr.name}">${pr.code} — ${pr.name}</option>`).join('')}</select></div><div><label>จำนวน</label><input id="oQty" type="number" value="10"></div><div><label>ช่องทาง</label><select id="oChannel"><option>เงินสด</option><option>เครดิต</option></select></div></div><br><button class="btn" id="ordSaveBtn" onclick="addOrder()">บันทึกออเดอร์</button> <button class="btn ghost" id="ordCancelBtn" style="display:none" onclick="cancelEditOrder()">ยกเลิกการแก้ไข</button> <span id="oMsg"></span></div>
+ <div class="card"><h3>รายการทั้งหมด (${rows.length})</h3>${table(['วันที่','เลขที่','ลูกค้า','สินค้า','จำนวน','ยอด','ช่องทาง','สถานะ','จัดการ'],rows.map((o,i)=>[o.date,o.no,o.customer,o.product,o.qty+' '+(o.unit||''),money(o.total),o.channel||'',badge(o.status),`<button class="btn small gold" onclick="editOrder(${dataFor('Orders').indexOf(o)})">✏️ แก้ไข</button> <button class="btn small" onclick="changeStatus('Orders',${i})">เลื่อนสถานะ →</button>`]))}</div>`;
 }
 function pageProducts(){
  const rows=filterRows(dataFor('Products'),['name','code']);
- return `<h1>🥫 สินค้า</h1>${searchBar(['ใช้งาน'])}<div class="card"><h3>รายการสินค้า (${rows.length})</h3>${table(['รหัส','สินค้า','หน่วย','ราคา','สต็อก','สถานะ'],rows.map(p=>[p.code,p.name,p.unit,money(p.price),p.stock+' '+p.unit,badge(p.status)]))}</div>
- <div class="card"><h3>➕ เพิ่มสินค้า</h3><div class="row r3"><div><label>ชื่อสินค้า</label><input id="pName" placeholder="เช่น น้ำพริกเผา"></div><div><label>ราคา</label><input id="pPrice" type="number" value="150"></div><div><label>หน่วย</label><input id="pUnit" value="กระปุก"></div></div><br><button class="btn" onclick="addRow('Products')">บันทึกสินค้า</button></div>`;
+ return `<h1>🥫 สินค้า</h1>${searchBar(['ใช้งาน'])}<div class="card"><h3>รายการสินค้า (${rows.length})</h3>${table(['รหัส','สินค้า','หน่วย','ราคา','สต็อก','สถานะ','จัดการ'],rows.map(p=>[p.code,p.name,p.unit,money(p.price),p.stock+' '+p.unit,badge(p.status),`<button class="btn small gold" onclick="editProduct(${dataFor('Products').indexOf(p)})">✏️ แก้ไขราคา</button>`]))}</div>
+ <div class="card"><h3 id="prodFormTitle">➕ เพิ่มสินค้า</h3><div class="row r3"><div><label>ชื่อสินค้า</label><input id="pName" placeholder="เช่น น้ำพริกเผา"></div><div><label>ราคา</label><input id="pPrice" type="number" value="150"></div><div><label>หน่วย</label><input id="pUnit" value="กระปุก"></div></div><br><button class="btn" id="prodSaveBtn" onclick="addRow('Products')">บันทึกสินค้า</button> <button class="btn ghost" id="prodCancelBtn" style="display:none" onclick="cancelEditProduct()">ยกเลิกการแก้ไข</button></div>`;
 }
 function pageStock(){
  const rows=filterRows(dataFor('Stock'),['name','code','status']);
@@ -181,8 +181,8 @@ function pageSuppliers(){
 function pageProduction(){
  const rows=filterRows(dataFor('Production'),['product','worker','status']);
  return `<h1>🏭 ผลิต</h1><p class="muted">เบิกใช้ผลิต → ตัดสต็อกวัตถุดิบอัตโนมัติ (เมื่อเชื่อม Sheet)</p>${searchBar(['รอผลิต','สำเร็จ'])}
- <div class="card"><h3>➕ สั่งผลิตใหม่ + เบิกวัตถุดิบ</h3><div class="row r3"><div><label>สินค้าที่จะผลิต</label><select id="prProduct">${dataFor('Products').map(pr=>`<option value="${pr.name}">${pr.code} — ${pr.name}</option>`).join('')}</select></div><div><label>จำนวน</label><input id="prQty" type="number" value="50"></div><div><label>กะ</label><select id="prShift"><option>กะเช้า</option><option>กะบ่าย</option></select></div></div><div style="height:10px"></div><div><label>เบิกวัตถุดิบที่ใช้ผลิต (เช่น พริกแห้ง 5 กก. / หมู 10 กก.)</label><input id="prMaterial" placeholder="เช่น เบิกใช้ผลิต: พริกแห้ง 5 กก."></div><br><button class="btn" onclick="addProduction()">สั่งผลิต + เบิกวัตถุดิบ</button> <span id="prMsg"></span></div>
- <div class="card"><h3>คิวผลิต (${rows.length})</h3>${table(['วันที่','สินค้า','จำนวน','คนผลิต','กะ','เบิกใช้ผลิต','สถานะ'],rows.map(p=>[p.date,p.product,p.qty+' '+(p.unit||''),p.worker||'',p.shift||'',p.material||'',badge(p.status)]))}</div>`;
+ <div class="card"><h3 id="prFormTitle">➕ สั่งผลิตใหม่ + เบิกวัตถุดิบ</h3><div class="row r3"><div><label>สินค้าที่จะผลิต</label><select id="prProduct">${dataFor('Products').map(pr=>`<option value="${pr.name}">${pr.code} — ${pr.name}</option>`).join('')}</select></div><div><label>จำนวน</label><input id="prQty" type="number" value="50"></div><div><label>กะ</label><select id="prShift"><option>กะเช้า</option><option>กะบ่าย</option></select></div></div><div style="height:10px"></div><div><label>เบิกวัตถุดิบที่ใช้ผลิต (เช่น พริกแห้ง 5 กก. / หมู 10 กก.)</label><input id="prMaterial" placeholder="เช่น เบิกใช้ผลิต: พริกแห้ง 5 กก."></div><br><button class="btn" id="prSaveBtn" onclick="addProduction()">สั่งผลิต + เบิกวัตถุดิบ</button> <button class="btn ghost" id="prCancelBtn" style="display:none" onclick="cancelEditProduction()">ยกเลิกการแก้ไข</button> <span id="prMsg"></span></div>
+ <div class="card"><h3>คิวผลิต (${rows.length})</h3>${table(['วันที่','สินค้า','จำนวน','คนผลิต','กะ','เบิกใช้ผลิต','สถานะ','จัดการ'],rows.map(p=>[p.date,p.product,p.qty+' '+(p.unit||''),p.worker||'',p.shift||'',p.material||'',badge(p.status),`<button class="btn small gold" onclick="editProduction(${dataFor('Production').indexOf(p)})">✏️ แก้ไข</button>`]))}</div>`;
 }
 function pageAccounting(){
  const rows=dataFor('Accounting');
@@ -222,10 +222,101 @@ function pageSettings(){
  <div class="card"><h3>โครง Sheet ที่ต้องมี (9 ชีต)</h3><p class="muted">Dashboard | Orders | Products | Stock | Customers | Suppliers | Production | Accounting | Users — แถวแรกคือชื่อคอลัมน์ ฟังก์ชัน setupSheets() จะสร้างให้เอง</p></div>`;
 }
 // actions (demo + live)
+var EDITING_ORDER=-1, EDITING_PRODUCTION=-1, EDITING_PRODUCT=-1;
+function fullIdx(sheet, obj){ try{ return dataFor(sheet).indexOf(obj); }catch(e){ return -1; } }
+function editOrder(full){
+  var rows=dataFor('Orders'); var o=rows[full]; if(!o) return;
+  EDITING_ORDER=full;
+  var set=function(id,v){var el=document.getElementById(id);if(el)el.value=v==null?'':v;};
+  set('oCustomer',o.customer); set('oProduct',o.product); set('oQty',o.qty); set('oChannel',o.channel);
+  var title=document.getElementById('ordFormTitle'); if(title) title.textContent='✏️ แก้ไขออเดอร์: '+(o.no||'');
+  var btn=document.getElementById('ordSaveBtn'); if(btn) btn.textContent='💾 บันทึกการแก้ไข';
+  var cancel=document.getElementById('ordCancelBtn'); if(cancel) cancel.style.display='inline-block';
+  document.getElementById('ordFormTitle').scrollIntoView({behavior:'smooth'});
+  toast('กำลังแก้ไขออเดอร์: '+(o.no||''));
+}
+function cancelEditOrder(){
+  EDITING_ORDER=-1;
+  var q=document.getElementById('oQty'); if(q) q.value=10;
+  var title=document.getElementById('ordFormTitle'); if(title) title.textContent='➕ เพิ่มออเดอร์ใหม่';
+  var btn=document.getElementById('ordSaveBtn'); if(btn) btn.textContent='บันทึกออเดอร์';
+  var cancel=document.getElementById('ordCancelBtn'); if(cancel) cancel.style.display='none';
+}
+function editProduction(full){
+  var rows=dataFor('Production'); var pr=rows[full]; if(!pr) return;
+  EDITING_PRODUCTION=full;
+  var set=function(id,v){var el=document.getElementById(id);if(el)el.value=v==null?'':v;};
+  set('prProduct',pr.product); set('prQty',pr.qty); set('prShift',pr.shift); set('prMaterial',pr.material);
+  var title=document.getElementById('prFormTitle'); if(title) title.textContent='✏️ แก้ไขสั่งผลิต: '+pr.product+' ('+pr.date+')';
+  var btn=document.getElementById('prSaveBtn'); if(btn) btn.textContent='💾 บันทึกการแก้ไข';
+  var cancel=document.getElementById('prCancelBtn'); if(cancel) cancel.style.display='inline-block';
+  document.getElementById('prFormTitle').scrollIntoView({behavior:'smooth'});
+  toast('กำลังแก้ไขสั่งผลิต: '+pr.product);
+}
+function cancelEditProduction(){
+  EDITING_PRODUCTION=-1;
+  var q=document.getElementById('prQty'); if(q) q.value=50;
+  var m=document.getElementById('prMaterial'); if(m) m.value='';
+  var title=document.getElementById('prFormTitle'); if(title) title.textContent='➕ สั่งผลิตใหม่ + เบิกวัตถุดิบ';
+  var btn=document.getElementById('prSaveBtn'); if(btn) btn.textContent='สั่งผลิต + เบิกวัตถุดิบ';
+  var cancel=document.getElementById('prCancelBtn'); if(cancel) cancel.style.display='none';
+}
+function editProduct(full){
+  var rows=dataFor('Products'); var pr=rows[full]; if(!pr) return;
+  EDITING_PRODUCT=full;
+  var set=function(id,v){var el=document.getElementById(id);if(el)el.value=v==null?'':v;};
+  set('pName',pr.name); set('pPrice',pr.price); set('pUnit',pr.unit);
+  var title=document.getElementById('prodFormTitle'); if(title) title.textContent='✏️ แก้ไขสินค้า: '+pr.code+' — '+pr.name+' (แก้ราคา / ชื่อ / หน่วยตรงนี้)';
+  var btn=document.getElementById('prodSaveBtn'); if(btn) btn.textContent='💾 บันทึกการแก้ไข';
+  var cancel=document.getElementById('prodCancelBtn'); if(cancel) cancel.style.display='inline-block';
+  document.getElementById('prodFormTitle').scrollIntoView({behavior:'smooth'});
+  toast('กำลังแก้ไขสินค้า: '+pr.name);
+}
+function cancelEditProduct(){
+  EDITING_PRODUCT=-1;
+  ['pName','pPrice','pUnit'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var pp=document.getElementById('pPrice'); if(pp) pp.value=150;
+  var pu=document.getElementById('pUnit'); if(pu) pu.value='กระปุก';
+  var title=document.getElementById('prodFormTitle'); if(title) title.textContent='➕ เพิ่มสินค้า';
+  var btn=document.getElementById('prodSaveBtn'); if(btn) btn.textContent='บันทึกสินค้า';
+  var cancel=document.getElementById('prodCancelBtn'); if(cancel) cancel.style.display='none';
+}
 function addOrder(){
- const c=document.getElementById('oCustomer').value||'ลูกค้าไม่ระบุ';const p=document.getElementById('oProduct').value;const q=Number(document.getElementById('oQty').value||0);const ch=document.getElementById('oChannel').value;
- if(!API){DEMO.Orders.unshift({date:new Date().toISOString().slice(0,10),no:'ORD-'+Math.floor(Math.random()*900+100),customer:c,product:p,qty:q,unit:'กระปุก',total:q*150,channel:ch,status:'รอคอนเฟิร์ม'});toast('บันทึกแล้ว (โหมดทดลอง)');render();return;}
- fetch(API,{method:'POST',body:JSON.stringify({action:'saveOrder',customer:c,product:p,qty:q,channel:ch})}).then(()=>{toast('บันทึกลง Sheet แล้ว');loadAll();});
+  var c=(document.getElementById('oCustomer')||{}).value||'';
+  var p=(document.getElementById('oProduct')||{}).value||'';
+  var q=Number((document.getElementById('oQty')||{}).value||0);
+  var ch=(document.getElementById('oChannel')||{}).value||'เงินสด';
+  var msg=document.getElementById('oMsg');
+  if(!c) return alert('เลือกลูกค้าก่อน');
+  if(!p) return alert('เลือกสินค้าก่อน');
+  if(!q||q<=0) return alert('ใส่จำนวนที่มากกว่า 0');
+  var pr=dataFor('Products').find(function(x){return x.name===p;})||{};
+  var unit=pr.unit||'กระปุก';
+  var price=Number(pr.price||0);
+  var total=q*price;
+  var today=new Date(); var date=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  if(EDITING_ORDER>=0){
+    var orig=dataFor('Orders')[EDITING_ORDER]||{};
+    var values=[orig.date||date, orig.no||'', c, p, q, unit, total, ch, orig.status||'รอคอนเฟิร์ม'];
+    if(!API){
+      var target=DEMO.Orders[EDITING_ORDER]; if(target){ target.customer=c; target.product=p; target.qty=q; target.unit=unit; target.total=total; target.channel=ch; }
+      toast('แก้ไขออเดอร์แล้ว ✅'); cancelEditOrder(); render(); return;
+    }
+    if(msg) msg.textContent=' กำลังบันทึกการแก้ไข...';
+    fetch(API,{method:'POST',body:JSON.stringify({action:'updateRowByIndex',sheet:'Orders',rowIndex:EDITING_ORDER+2,values:values})}).then(function(r){return r.json();}).then(function(j){
+      if(j.ok){ if(msg) msg.textContent=' แก้ไขออเดอร์แล้ว ✅'; toast('แก้ไขออเดอร์แล้ว ✅'); cancelEditOrder(); loadAll(); }
+      else { if(msg) msg.textContent=''; toast('แก้ไขไม่สำเร็จ: '+(j.error||'')); }
+    }).catch(function(e){ if(msg) msg.textContent=''; toast('แก้ไขไม่สำเร็จ: '+e.message); });
+    return;
+  }
+  var no='ORD-'+date.replace(/-/g,'')+'-'+Math.floor(Math.random()*900+100);
+  var valuesNew=[date,no,c,p,q,unit,total,ch,'รอคอนเฟิร์ม'];
+  if(!API){ DEMO.Orders.unshift({date:date,no:no,customer:c,product:p,qty:q,unit:unit,total:total,channel:ch,status:'รอคอนเฟิร์ม'}); if(msg) msg.textContent=' บันทึกออเดอร์แล้ว (โหมดทดลอง)'; toast('บันทึกแล้ว (โหมดทดลอง)'); render(); return; }
+  if(msg) msg.textContent=' กำลังบันทึก...';
+  fetch(API,{method:'POST',body:JSON.stringify({action:'saveRow',sheet:'Orders',values:valuesNew})}).then(function(r){return r.json();}).then(function(j){
+    if(j.ok){ if(msg) msg.textContent=' บันทึกออเดอร์ '+no+' ลงชีต Orders แล้ว ✅ (ยอด '+total.toLocaleString('th-TH')+' ฿)'; toast('บันทึกออเดอร์แล้ว ✅'); loadAll(); }
+    else { if(msg) msg.textContent=''; toast('บันทึกไม่สำเร็จ: '+(j.error||'')); }
+  }).catch(function(e){ if(msg) msg.textContent=''; toast('บันทึกไม่สำเร็จ: '+e.message); });
 }
 
 var EDITING_CUSTOMER='';
@@ -306,6 +397,13 @@ function addRow(kind){
     var pp=Number((document.getElementById('pPrice')||{}).value||0);
     var pu=(document.getElementById('pUnit')||{}).value||'กระปุก';
     if(!pn) return alert('ใส่ชื่อสินค้าก่อน');
+    if(EDITING_PRODUCT>=0){
+      var origPr=dataFor('Products')[EDITING_PRODUCT]||{};
+      var valuesE2=[origPr.code||'',pn,pu,pp,Number(origPr.stock||0),origPr.status||'ใช้งาน'];
+      if(!API){ var tp2=DEMO.Products[EDITING_PRODUCT]; if(tp2){ tp2.name=pn; tp2.unit=pu; tp2.price=pp; } toast('แก้ไขสินค้าแล้ว ✅'); cancelEditProduct(); render(); return; }
+      fetch(API,{method:'POST',body:JSON.stringify({action:'updateRowByIndex',sheet:'Products',rowIndex:EDITING_PRODUCT+2,values:valuesE2})}).then(function(r){return r.json();}).then(function(j){ if(j.ok){toast('แก้ไขสินค้าแล้ว ✅');cancelEditProduct();loadAll();} else toast('แก้ไขไม่สำเร็จ: '+(j.error||'')); });
+      return;
+    }
     values=['P-'+Math.floor(Math.random()*900+100),pn,pu,pp,0,'ใช้งาน'];
     if(!API){ DEMO.Products.push({code:values[0],name:pn,unit:pu,price:pp,stock:0,status:'ใช้งาน'}); toast('บันทึกแล้ว (โหมดทดลอง)'); render(); return; }
   } else { toast('บันทึกแล้ว (โหมดทดลอง)'); return; }
@@ -324,8 +422,22 @@ function addProduction(){
   var worker='คนผลิต';
   try{ var u=JSON.parse(localStorage.getItem('ok1_user')||'{}'); if(u.name) worker=u.name; }catch(e){}
   var today=new Date(); var date=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
-  var values=[date,prod,qty,unit,worker,shift,material,'รอผลิต'];
   var msg=document.getElementById('prMsg');
+  if(EDITING_PRODUCTION>=0){
+    var origP=dataFor('Production')[EDITING_PRODUCTION]||{};
+    var valuesE=[origP.date||date,prod,qty,unit,origP.worker||worker,shift,material,origP.status||'รอผลิต'];
+    if(!API){
+      var tp=DEMO.Production[EDITING_PRODUCTION]; if(tp){ tp.product=prod; tp.qty=qty; tp.unit=unit; tp.shift=shift; tp.material=material; }
+      toast('แก้ไขสั่งผลิตแล้ว ✅'); cancelEditProduction(); render(); return;
+    }
+    if(msg) msg.textContent=' กำลังบันทึกการแก้ไข...';
+    fetch(API,{method:'POST',body:JSON.stringify({action:'updateRowByIndex',sheet:'Production',rowIndex:EDITING_PRODUCTION+2,values:valuesE})}).then(function(r){return r.json();}).then(function(j){
+      if(j.ok){ if(msg) msg.textContent=' แก้ไขสั่งผลิตแล้ว ✅'; toast('แก้ไขสั่งผลิตแล้ว ✅'); cancelEditProduction(); loadAll(); }
+      else { if(msg) msg.textContent=''; toast('แก้ไขไม่สำเร็จ: '+(j.error||'')); }
+    }).catch(function(e){ if(msg) msg.textContent=''; toast('แก้ไขไม่สำเร็จ: '+e.message); });
+    return;
+  }
+  var values=[date,prod,qty,unit,worker,shift,material,'รอผลิต'];
   if(!API){
     DEMO.Production.push({date:date,product:prod,qty:qty,unit:unit,worker:worker,shift:shift,material:material,status:'รอผลิต'});
     if(msg) msg.textContent=' สั่งผลิต '+prod+' '+qty+' '+unit+' แล้ว (โหมดทดลอง)';
